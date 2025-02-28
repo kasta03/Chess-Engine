@@ -7,7 +7,6 @@ private:
     std::vector<int> linear_coordinates {1, 6};
     std::array<U64, 64> white_knights_pre_attacks;
     std::array<std::vector<int>, 64> coordinates_white_knights_pre_attacks;
-    // std::array<U64, 64> white_knights_masks;
     std::vector<std::pair<int, int>> white_knights_moves{};
 
 public:
@@ -45,18 +44,18 @@ public:
         
         for (int from_square : linear_coordinates)
         {
-            for (int to_coordinate : coordinates_white_knights_pre_attacks[from_square])
+            for (int to_square : coordinates_white_knights_pre_attacks[from_square])
             {
-                U64 target_mask = 1ULL << to_coordinate;
+                U64 target_mask = 1ULL << to_square;
                 if(!(target_mask & white_pieces_mask))
                 {
-                    white_knights_moves.push_back(std::make_pair(from_square, to_coordinate));
+                    white_knights_moves.push_back(std::make_pair(from_square, to_square));
                 }
             }
         }
         return white_knights_moves;
     }
-    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int> linear_coordinates)
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates)
     {
         U64 from_mask = 1ULL << move_to_execute.first;
         U64 to_mask = 1ULL << move_to_execute.second;
@@ -71,9 +70,9 @@ public:
         {
             if(linear_coordinates.at(i) == move_to_execute.first)
             {
-                linear_coordinates.at(i) += move_to_execute.second;
+                linear_coordinates.at(i) = move_to_execute.second;
             }
         }
         return current_knight_mask;
     }
-}
+};

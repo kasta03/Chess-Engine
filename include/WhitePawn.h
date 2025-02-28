@@ -3,70 +3,162 @@
 
 class WhitePawn : public Pawn
 {
-public:
-    static std::array<U64, 64> white_pawn_pre_moves;
+private:
+    std::vector<int> linear_coordinates{8, 9, 10, 11, 12, 13, 14, 15};
     std::array<U64, 64> white_pawn_pre_attacks;
-    std::array<U64, 64> white_pawn_positions;
+    std::array<U64, 64> white_pawn_pre_moves;
+    std::array<std::vector<int>, 64> coordinates_white_pawn_pre_attacks;
+    std::array<std::vector<int>, 64> coordinates_white_pawn_pre_moves;
     std::vector<std::pair<int, int>> white_pawn_moves;
 
 public:
     static bool isWhite;
     static U64 white_pawns_mask;
-    
+
     void CalculateWhitePawnsPreMoves()
     {
         for (int i = 8; i < 56; ++i)
         {
-            white_pawn_pre_moves[i] = 1ULL << (8 + i);
+            int move = i + 8;
+            white_pawn_pre_moves[i] = 1ULL << move;
+            coordinates_white_pawn_pre_moves[i].push_back(move);
+
             if (i / 8 == 1)
             {
-                white_pawn_pre_moves[i] |= 1ULL << (16 + i);
+                int double_step_move = i + 16;
+                int one_step_move = i + 8;
+
+                if (!(white_pawn_pre_moves[i] & all_pieces_mask) && !(white_pawn_pre_moves[one_step_move] & all_pieces_mask))
+                {
+                    white_pawn_pre_moves[i] |= 1ULL << double_step_move;
+                    coordinates_white_pawn_pre_moves[i].push_back(double_step_move);
+                }
             }
         }
     }
+
     void CalculateWhitePawnsPreAttacks()
     {
         for (int i = 8; i < 56; ++i)
         {
-            if (i % 8 != 0)
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            if (from_file != 0)
             {
-                white_pawn_pre_attacks[i] |= 1ULL << (7 + i);
+                int attack_left = i + 7;
+                if (attack_left >= 0 && attack_left < 64)
+                {
+                    white_pawn_pre_attacks[i] |= 1ULL << attack_left;
+                    coordinates_white_pawn_pre_attacks[i].push_back(attack_left);
+                }
             }
-            if (i % 8 != 7)
+
+            if (from_file != 7)
             {
-                white_pawn_pre_attacks[i] |= 1ULL << (9 + i);
+                int attack_right = i + 9;
+                if (attack_right >= 0 && attack_right < 64)
+                {
+                    white_pawn_pre_attacks[i] |= 1ULL << attack_right;
+                    coordinates_white_pawn_pre_attacks[i].push_back(attack_right);
+                }
             }
         }
     }
-    void getPawnsPositions();
-    
+
     std::vector<std::pair<int, int>> CalculateWhitePawnsMoves()
     {
         white_pawn_moves.clear();
-        getPawnsPositions();
-        for (int i = 0; i < 56; ++i)
+
+        for (int from_square : linear_coordinates)
         {
-            if (white_pawn_positions[i] != 0)
+            for (int to_square : coordinates_white_pawn_pre_moves[from_square])
             {
-                if (white_pawn_pre_moves[i] & all_pieces_mask)
+                U64 target_mask = 1ULL << to_square;
+                if (!(target_mask & all_pieces_mask))
                 {
-                    continue;
+                    white_pawn_moves.emplace_back(from_square, to_square);
                 }
-                white_pawn_moves.push_back(std::make_pair(i, i + 8));
-                if (i / 8 == 1 && (white_pawn_pre_moves[i] & all_pieces_mask) == 0)
+            }
+
+            if (from_square / 8 == 1)
+            {
+                int one_step_square = from_square + 8;
+                int double_step_square = from_square + 16;
+
+                U64 one_step_mask = 1ULL << one_step_square;
+                U64 double_step_mask = 1ULL << double_step_square;
+
+                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
                 {
-                    white_pawn_moves.push_back(std::make_pair(i, i + 16));
+                    white_pawn_moves.emplace_back(from_square, double_step_square);
                 }
-                if (i % 8 != 0 && (white_pawn_pre_attacks[i] & black_pieces_mask) != 0)
+            }
+
+            for (int attack_square : coordinates_white_pawn_pre_attacks[from_square])
+            {
+                U64 attack_mask = 1ULL << attack_square;
+                if (attack_mask & black_pieces_mask)
                 {
-                    white_pawn_moves.push_back(std::make_pair(i, i + 7));
-                }
-                if (i % 8 != 7 && (white_pawn_pre_attacks[i] & black_pieces_mask) != 0)
-                {
-                    white_pawn_moves.push_back(std::make_pair(i, i + 9));
+                    white_pawn_moves.emplace_back(from_square, attack_square);
                 }
             }
         }
         return white_pawn_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_pawn_mask ^= from_mask;
+        current_pawn_mask ^= to_mask;
+
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        if (move_to_execute.second >= 56 && move_to_execute.second <= 63)
+        {
+            std::vector<std::pair<int, char>> promotion_choices;
+            promotion_choices.push_back({move_to_execute.second, 'Q'});
+            promotion_choices.push_back({move_to_execute.second, 'R'});
+            promotion_choices.push_back({move_to_execute.second, 'N'});
+            promotion_choices.push_back({move_to_execute.second, 'B'});
+
+            for (auto &promotion : promotion_choices)
+            {
+                char promotion_type = promotion.second;
+                U64 promotion_mask = 1ULL << promotion.first;
+
+                switch (promotion_type)
+                {
+                case 'Q':
+                    WhiteQueen::white_queens_mask |= promotion_mask;
+                    break;
+                case 'R':
+                    WhiteRook::white_rooks_mask |= promotion_mask;
+                    break;
+                case 'N':
+                    WhiteKnight::white_knights_mask |= promotion_mask;
+                    break;
+                case 'B':
+                    WhiteBishop::white_bishops_mask |= promotion_mask;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+                break;
+            }
+        }
+
+        return current_pawn_mask;
     }
 };
