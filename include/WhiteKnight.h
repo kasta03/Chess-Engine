@@ -43,14 +43,14 @@ public:
     {
         white_knights_moves.clear();
         
-        for (int current : linear_coordinates)
+        for (int from_square : linear_coordinates)
         {
-            for (int to_coordinate : coordinates_white_knights_pre_attacks[current])
+            for (int to_coordinate : coordinates_white_knights_pre_attacks[from_square])
             {
                 U64 target_mask = 1ULL << to_coordinate;
                 if(!(target_mask & white_pieces_mask))
                 {
-                    white_knights_moves.push_back(std::make_pair(current, to_coordinate));
+                    white_knights_moves.push_back(std::make_pair(from_square, to_coordinate));
                 }
             }
         }
@@ -58,21 +58,20 @@ public:
     }
     U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int> linear_coordinates)
     {
-        from_mask = 1ULL << pair.first;
-        to_mask = 1ULL << pair.second;
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
         current_knight_mask ^= from_mask;
-        current_knight_mask ^=to_mask;
+        current_knight_mask ^= to_mask;
         if (to_mask & black_pieces_mask)
         {
             MaskToCapture(to_mask, false);
         }
 
-        int number;
         for(int i = 0; i < linear_coordinates.size(); ++i)
         {
-            if(linear_coordinates.at(i) == pair.first)
+            if(linear_coordinates.at(i) == move_to_execute.first)
             {
-                linear_coordinates.at(i) += pair.second;
+                linear_coordinates.at(i) += move_to_execute.second;
             }
         }
         return current_knight_mask;

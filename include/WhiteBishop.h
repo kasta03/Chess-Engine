@@ -40,36 +40,65 @@ public:
     std::vector<std::pair<int, int>> CalculateWhiteBishopsMoves()
     {
         white_bishops_moves.clear();
-        
-        for (int current : linear_coordinates)
+       
+        for (int from_square : linear_coordinates)
         {
-            for (int i = 0; i < coordinates_white_bishops_pre_attacks.at(current).size(); ++i)
+            const auto& attacks = coordinates_white_bishops_pre_attacks.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
             {
-                int to_coordinate = coordinates_white_bishops_pre_attacks.at(current).at(i);
-                int next_coordinate = coordinates_white_bishops_pre_attacks.at(current).at(i + 1);
+                int to_coordinate = attacks[i];
                 U64 target_mask = 1ULL << to_coordinate;
-                int to_direction = to_coordinate - current > 0 ? to_coordinate - current : current - to_coordinate;
-                int next_direction = next_coordinate - current > 0 ? next_coordinate - current : current - next_coordinate;
                 
                 if(!(target_mask & all_pieces_mask))
                 {
-                    white_bishops_moves.push_back(std::make_pair(current, to_coordinate));
+                    white_bishops_moves.push_back(std::make_pair(from_square, to_coordinate));
                 }
                 else if (target_mask & black_pieces_mask)
                 {
-                    white_bishops_moves.push_back(std::make_pair(current, to_coordinate));
-                    while(to_direction == next_direction)
+                    white_bishops_moves.push_back(std::make_pair(from_square, to_coordinate));
+
+                    int current_direction = to_coordinate - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i+1] - from_square) / abs(attacks[i+1] - from_square) == 
+                            current_direction / abs(current_direction))
                     {
                         ++i;
-                        int to_coordinate = coordinates_white_bishops_pre_attacks.at(current).at(i);
-                        int next_coordinate = coordinates_white_bishops_pre_attacks.at(current).at(i + 1);
-                        int to_direction = to_coordinate - current > 0 ? to_coordinate - current : current - to_coordinate;
-                        int next_direction = next_coordinate - current > 0 ? next_coordinate - current : current - next_coordinate;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_coordinate - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i+1] - from_square) / abs(attacks[i+1] - from_square) == 
+                            current_direction / abs(current_direction))
+                    {
+                        ++i;
                     }
                 }
             }
         }
         return white_bishops_moves;
     }
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int> linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_bishop_mask ^= from_mask;
+        from_square_bishop_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
 
+        for(int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if(linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+        return from_square_bishop_mask;
+    }
 };
