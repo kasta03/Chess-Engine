@@ -1,0 +1,2772 @@
+===== Bishop.h =====
+#pragma once
+#include "Piece.h"
+
+class Bishop : virtual public Piece
+{
+protected:
+    std::array<int, 4> possible_moves = {-9, -7, 7, 9};
+};
+
+
+===== Black.h =====
+#pragma once
+#include "Piece.h"
+
+class Black: virtual public Piece
+{
+protected:
+    const bool isWhite = false;
+};
+
+
+===== BlackBishop.h =====
+#pragma once
+#include "Bishop.h"
+
+class BlackBishop : public Bishop
+{
+private:
+
+    std::vector<int> linear_coordinates{58, 61};
+    std::array<std::vector<int>, 64> coordinates_black_bishops_pre_attacks;
+    std::vector<std::pair<int, int>> black_bishops_moves{};
+
+public:
+
+    static bool isBlack;
+    static U64 black_bishops_mask;
+
+    void CalculateBlackBishopsPreAttacks()
+    {        
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    while(std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                    {
+                        coordinates_black_bishops_pre_attacks.at(i).push_back(to_square);
+                        to_square += each;
+                    }
+                }
+            }    
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackBishopsMoves()
+    {
+        black_bishops_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = coordinates_black_bishops_pre_attacks.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    black_bishops_moves.push_back(std::make_pair(from_square, to_square));
+                }
+                else if (target_mask & white_pieces_mask)
+                {
+                    black_bishops_moves.push_back(std::make_pair(from_square, to_square));
+
+                    int current_direction = to_square - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) == 
+                            current_direction / std::abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) == 
+                            current_direction / std::abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return black_bishops_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_bishop_mask ^= from_mask;
+        from_square_bishop_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_bishop_mask;
+    }
+};
+
+
+===== BlackKing.h =====
+
+
+===== BlackKnight.h =====
+#pragma once
+#include "Knight.h"
+
+class BlackKnight : public Knight
+{
+private:
+    std::vector<int> linear_coordinates{57, 62};
+    std::array<U64, 64> black_knights_pre_attacks;
+    std::array<std::vector<int>, 64> coordinates_black_knights_pre_attacks;
+    std::vector<std::pair<int, int>> black_knights_moves{};
+
+public:
+    static bool isBlack;
+    static U64 black_knights_mask;
+
+    void CalculateBlackKnightsPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            for (int j = 0; j < 8; ++j)
+            {
+                int to_square = i + possible_moves[j];
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    int diff_rank = abs(from_rank - to_rank);
+                    int diff_file = abs(from_file - to_file);
+                    if (diff_file + diff_rank == 3 && diff_file > 0 && diff_rank > 0)
+                    {
+                        black_knights_pre_attacks[i] |= 1ULL << (to_square);
+                        coordinates_black_knights_pre_attacks[i].push_back(to_square);
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackKnightsMoves()
+    {
+        black_knights_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : coordinates_black_knights_pre_attacks[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if (!(target_mask & black_pieces_mask))
+                {
+                    black_knights_moves.push_back(std::make_pair(from_square, to_square));
+                }
+            }
+        }
+        return black_knights_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_knight_mask ^= from_mask;
+        current_knight_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return current_knight_mask;
+    }
+};
+
+
+===== BlackPawn.h =====
+#pragma once
+#include "Pawn.h"
+
+class BlackPawn : public Pawn
+{
+private:
+    std::vector<int> linear_coordinates{48, 49, 50, 51, 52, 53, 54, 55};
+    std::array<U64, 64> black_pawn_pre_attacks;
+    std::array<U64, 64> black_pawn_pre_moves;
+    std::array<std::vector<int>, 64> coordinates_black_pawn_pre_attacks;
+    std::array<std::vector<int>, 64> coordinates_black_pawn_pre_moves;
+    std::vector<std::pair<int, int>> black_pawn_moves;
+
+public:
+    static bool isBlack;
+    static U64 black_pawns_mask;
+
+    void CalculateBlackPawnsPreMoves()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int move = i - 8;
+            black_pawn_pre_moves[i] = 1ULL << move;
+            coordinates_black_pawn_pre_moves[i].push_back(move);
+
+            if (i / 8 == 6)
+            {
+                int double_step_move = i - 16;
+                int one_step_move = i - 8;
+
+                U64 one_step_mask = 1ULL << one_step_move;
+                U64 double_step_mask = 1ULL << double_step_move;
+
+                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                {
+                    black_pawn_pre_moves[i] |= double_step_mask;
+                    coordinates_black_pawn_pre_moves[i].push_back(double_step_move);
+                }
+            }
+        }
+    }
+
+    void CalculateBlackPawnsPreAttacks()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            if (from_file != 0)
+            {
+                int attack_left = i - 9;
+                if (attack_left >= 0 && attack_left < 64)
+                {
+                    black_pawn_pre_attacks[i] |= 1ULL << attack_left;
+                    coordinates_black_pawn_pre_attacks[i].push_back(attack_left);
+                }
+            }
+
+            if (from_file != 7)
+            {
+                int attack_right = i - 7;
+                if (attack_right >= 0 && attack_right < 64)
+                {
+                    black_pawn_pre_attacks[i] |= 1ULL << attack_right;
+                    coordinates_black_pawn_pre_attacks[i].push_back(attack_right);
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackPawnsMoves()
+    {
+        black_pawn_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : coordinates_black_pawn_pre_moves[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if (!(target_mask & all_pieces_mask))
+                {
+                    black_pawn_moves.emplace_back(from_square, to_square);
+                }
+            }
+
+            if (from_square / 8 == 6)
+            {
+                int one_step_square = from_square - 8;
+                int double_step_square = from_square - 16;
+
+                U64 one_step_mask = 1ULL << one_step_square;
+                U64 double_step_mask = 1ULL << double_step_square;
+
+                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                {
+                    black_pawn_moves.emplace_back(from_square, double_step_square);
+                }
+            }
+
+            for (int attack_square : coordinates_black_pawn_pre_attacks[from_square])
+            {
+                U64 attack_mask = 1ULL << attack_square;
+                if (attack_mask & white_pieces_mask)
+                {
+                    black_pawn_moves.emplace_back(from_square, attack_square);
+                }
+            }
+        }
+        return black_pawn_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_pawn_mask ^= from_mask;
+        current_pawn_mask ^= to_mask;
+
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        if (move_to_execute.second <= 7 && move_to_execute.second >= 0)
+        {
+            std::vector<std::pair<int, char>> promotion_choices;
+            promotion_choices.push_back({move_to_execute.second, 'Q'});
+            promotion_choices.push_back({move_to_execute.second, 'R'});
+            promotion_choices.push_back({move_to_execute.second, 'N'});
+            promotion_choices.push_back({move_to_execute.second, 'B'});
+
+            for (auto& promotion : promotion_choices)
+            {
+                char promotion_type = promotion.second;
+                U64 promotion_mask = 1ULL << promotion.first;
+
+                switch (promotion_type)
+                {
+                case 'Q':
+                    BlackQueen::black_queens_mask |= promotion_mask;
+                    break;
+                case 'R':
+                    BlackRook::black_rooks_mask |= promotion_mask;
+                    break;
+                case 'N':
+                    BlackKnight::black_knights_mask |= promotion_mask;
+                    break;
+                case 'B':
+                    BlackBishop::black_bishops_mask |= promotion_mask;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+                break;
+            }
+        }
+
+        return current_pawn_mask;
+    }
+};
+
+
+===== BlackQueen.h =====
+#pragma once
+#include "Queen.h"
+class BlackQueen : public Queen
+{
+private:
+    std::vector<int> linear_coordinates {59};
+    std::array<std::vector<int>, 64> coordinates_black_queens_pre_attacks;
+    std::vector<std::pair<int, int>> black_queens_moves{};
+
+public:
+    static bool isBlack;
+    static U64 black_queens_mask;
+
+    void CalculateBlackQueensPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    if(each == -8 || each == 8){
+                        while(std::abs(from_file - to_file) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_black_queens_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else if(each == -1 || each == 1){
+                        while(std::abs(from_rank - to_rank) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_black_queens_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else
+                    {
+                        while(std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_black_queens_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackQueensMoves()
+    {
+        black_queens_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = coordinates_black_queens_pre_attacks.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    black_queens_moves.push_back(std::make_pair(from_square, to_square));
+                }
+                else if (target_mask & white_pieces_mask)
+                {
+                    black_queens_moves.push_back(std::make_pair(from_square, to_square));
+
+                   int current_direction = to_square - from_square;
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                   int current_direction = to_square - from_square;
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return black_queens_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_queen_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_queen_mask ^= from_mask;
+        from_square_queen_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_queen_mask;
+    }
+};
+
+
+===== BlackRook.h =====
+#pragma once
+#include "Rook.h"
+
+class BlackRook : public Rook
+{
+private:
+    std::vector<int> linear_coordinates {56, 63};
+    std::array<std::vector<int>, 64> coordinates_black_rooks_pre_attacks;
+    std::vector<std::pair<int, int>> black_rooks_moves{};
+
+public:
+    static bool isBlack;
+    static U64 black_rooks_mask;
+
+    void CalculateBlackRooksPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    if(each == -8 || each == 8){
+                        while(std::abs(from_file - to_file) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_black_rooks_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else
+                    {
+                        while(std::abs(from_rank - to_rank) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_black_rooks_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackRooksMoves()
+    {
+        black_rooks_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = coordinates_black_rooks_pre_attacks.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    black_rooks_moves.push_back(std::make_pair(from_square, to_square));
+                }
+                else if (target_mask & white_pieces_mask)
+                {
+                    black_rooks_moves.push_back(std::make_pair(from_square, to_square));
+
+                    int current_direction = to_square - from_square;
+
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                   int current_direction = to_square - from_square;
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return black_rooks_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_rook_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_rook_mask ^= from_mask;
+        from_square_rook_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_rook_mask;
+    }
+};
+
+
+===== King.h =====
+#pragma once
+#include "Piece.h"
+
+class King : virtual public Piece
+{
+protected:
+    std::array<int, 8> possible_moves = {-9, -8, -7, -1, 1, 7, 8, 9};
+};
+
+
+===== Knight.h =====
+#pragma once
+#include "Piece.h"
+
+class Knight : virtual public Piece
+{
+protected:    
+    std::array<int, 8> possible_moves = {6, 15, 17, 10, -6, -15, -17, -10};
+};
+
+
+===== Pawn.h =====
+#pragma once
+#include "Piece.h"
+
+class Pawn : virtual public Piece
+{
+protected:
+    
+};
+
+
+===== Piece.h =====
+#pragma once
+#include <array>
+#include <utility>
+#include <vector>
+#include <iostream>
+#include <utility>
+
+using U64 = unsigned long long;
+class Pawn;
+class Knight;
+class WhitePawn;
+
+class Piece
+{
+protected:
+    void MaskToCapture(U64 to_mask, bool isWhite);
+public:
+    static U64 white_pieces_mask;
+    static U64 black_pieces_mask;
+    static U64 all_pieces_mask;
+    static U64 white_attacks_mask;
+    static U64 black_attacks_mask;
+
+};
+
+
+===== Queen.h =====
+#pragma once
+#include "Piece.h"
+
+class Queen : virtual public Piece
+{
+protected:
+    std::array<int, 8> possible_moves = {-9, -8, -7, -1, 1, 7, 8, 9};
+};
+
+
+===== Rook.h =====
+#pragma once
+#include "Piece.h"
+
+class Rook : virtual public Piece
+{
+protected:
+    std::array<int, 4> possible_moves = {-8, -1, 1, 8};
+};
+
+
+===== White.h =====
+#pragma once
+#include "Piece.h"
+
+class White: virtual public Piece
+{
+protected:
+    const bool isWhite = true;
+    U64 squares_controlled = 0;
+};
+
+
+===== WhiteBishop.h =====
+#pragma once
+#include "Bishop.h"
+#include "White.h"
+
+class WhiteBishop : public Bishop, public White
+{
+private:
+
+    std::vector<int> linear_coordinates {2, 5};
+    std::array<std::vector<int>, 64> coordinates_white_bishops_pre_attacks;
+    std::vector<std::pair<int, int>> white_bishops_moves{};
+
+public:
+
+    static U64 white_bishops_mask;
+
+    void CalculateWhiteBishopsPreAttacks()
+    {        
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    while(std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                    {
+                        coordinates_white_bishops_pre_attacks.at(i).push_back(to_square);
+                        to_square += each;
+                    }
+                }
+            }    
+        }
+    }
+    std::vector<std::pair<int, int>> CalculateWhiteBishopsMoves()
+    {
+        white_bishops_moves.clear();
+       
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = coordinates_white_bishops_pre_attacks.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+                
+                if(!(target_mask & all_pieces_mask))
+                {
+                    white_bishops_moves.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+                else if (target_mask & black_pieces_mask)
+                {
+                    white_bishops_moves.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+
+                    int current_direction = to_square - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i+1] - from_square) / abs(attacks[i+1] - from_square) == 
+                            current_direction / abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i+1] - from_square) / abs(attacks[i+1] - from_square) == 
+                            current_direction / abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return white_bishops_moves;
+    }
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_bishop_mask ^= from_mask;
+        from_square_bishop_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for(int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if(linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+        return from_square_bishop_mask;
+    }
+};
+
+
+===== WhiteKing.h =====
+#pragma once
+#include "King.h"
+#include "White.h"
+
+class WhiteKing : public King, public White
+{
+private:
+    std::vector<int> linear_coordinates {4};
+    std::array<U64, 64> white_king_pre_attacks;
+    std::array<std::vector<int>, 64> coordinates_white_king_pre_attacks;
+    std::vector<std::pair<int, int>> white_king_moves{};
+
+public:
+    static U64 white_king_mask;
+    
+    void CalculateWhiteKingPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            for (int j = 0; j < 8; ++j)
+            {
+                int to_square = i + possible_moves[j];
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    int diff_rank = abs(from_rank - to_rank);
+                    int diff_file = abs(from_file - to_file);
+                    if ((diff_file == 1 && diff_rank == 1) || (diff_file == 1 && diff_rank == 0) || (diff_file == 0 && diff_rank == 1))
+                    {
+                        white_king_pre_attacks[i] |= 1ULL << (to_square);
+                        coordinates_white_king_pre_attacks[i].push_back(to_square);
+                    }
+                }
+            }
+        }
+    }
+    std::vector<std::pair<int, int>> CalculateWhiteKingMoves()
+    {
+        white_king_moves.clear();
+        
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : coordinates_white_king_pre_attacks[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if(!(target_mask & white_pieces_mask) && !(target_mask & black_attacks_mask))
+                {
+                    white_king_moves.push_back(std::make_pair(from_square, to_square));
+                }
+            }
+        }
+        return white_king_moves;
+    }
+};
+
+
+===== WhiteKnight.h =====
+#pragma once
+#include "Knight.h"
+#include "White.h"
+
+class WhiteKnight : public Knight, public White
+{
+private:
+    std::vector<int> linear_coordinates {1, 6};
+    std::array<U64, 64> white_knights_pre_attacks;
+    std::array<std::vector<int>, 64> coordinates_white_knights_pre_attacks;
+    std::vector<std::pair<int, int>> white_knights_moves{};
+
+public:
+    static U64 white_knights_mask;
+    
+    void CalculateWhiteKnightsPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            for (int j = 0; j < 8; ++j)
+            {
+                int to_square = i + possible_moves[j];
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    int diff_rank = abs(from_rank - to_rank);
+                    int diff_file = abs(from_file - to_file);
+                    if (diff_file + diff_rank == 3 && diff_file > 0 && diff_rank > 0)
+                    {
+                        white_knights_pre_attacks[i] |= 1ULL << (to_square);
+                        coordinates_white_knights_pre_attacks[i].push_back(to_square);
+                    }
+                }
+            }
+        }
+    }
+    std::vector<std::pair<int, int>> CalculateWhiteKnightsMoves()
+    {
+        white_knights_moves.clear();
+        
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : coordinates_white_knights_pre_attacks[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if(!(target_mask & white_pieces_mask))
+                {
+                    white_knights_moves.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+            }
+        }
+        return white_knights_moves;
+    }
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_knight_mask ^= from_mask;
+        current_knight_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for(int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if(linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+        return current_knight_mask;
+    }
+};
+
+
+===== WhitePawn.h =====
+#pragma once
+#include "Pawn.h"
+#include "White.h"
+
+class WhitePawn : public Pawn, public White
+{
+private:
+    std::vector<int> linear_coordinates{8, 9, 10, 11, 12, 13, 14, 15};
+    std::array<U64, 64> white_pawn_pre_attacks;
+    std::array<U64, 64> white_pawn_pre_moves;
+    std::array<std::vector<int>, 64> coordinates_white_pawn_pre_attacks;
+    std::array<std::vector<int>, 64> coordinates_white_pawn_pre_moves;
+    std::vector<std::pair<int, int>> white_pawn_moves;
+
+public:
+    static U64 white_pawns_mask;
+
+    void CalculateWhitePawnsPreMoves()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int move = i + 8;
+            white_pawn_pre_moves[i] = 1ULL << move;
+            coordinates_white_pawn_pre_moves[i].push_back(move);
+
+            if (i / 8 == 1)
+            {
+                int double_step_move = i + 16;
+                int one_step_move = i + 8;
+
+                if (!(white_pawn_pre_moves[i] & all_pieces_mask) && !(white_pawn_pre_moves[one_step_move] & all_pieces_mask))
+                {
+                    white_pawn_pre_moves[i] |= 1ULL << double_step_move;
+                    coordinates_white_pawn_pre_moves[i].push_back(double_step_move);
+                }
+            }
+        }
+    }
+
+    void CalculateWhitePawnsPreAttacks()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            if (from_file != 0)
+            {
+                int attack_left = i + 7;
+                if (attack_left >= 0 && attack_left < 64)
+                {
+                    white_pawn_pre_attacks[i] |= 1ULL << attack_left;
+                    coordinates_white_pawn_pre_attacks[i].push_back(attack_left);
+                }
+            }
+
+            if (from_file != 7)
+            {
+                int attack_right = i + 9;
+                if (attack_right >= 0 && attack_right < 64)
+                {
+                    white_pawn_pre_attacks[i] |= 1ULL << attack_right;
+                    coordinates_white_pawn_pre_attacks[i].push_back(attack_right);
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateWhitePawnsMoves()
+    {
+        white_pawn_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : coordinates_white_pawn_pre_moves[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if (!(target_mask & all_pieces_mask))
+                {
+                    white_pawn_moves.emplace_back(from_square, to_square);
+                }
+            }
+
+            if (from_square / 8 == 1)
+            {
+                int one_step_square = from_square + 8;
+                int double_step_square = from_square + 16;
+
+                U64 one_step_mask = 1ULL << one_step_square;
+                U64 double_step_mask = 1ULL << double_step_square;
+
+                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                {
+                    white_pawn_moves.emplace_back(from_square, double_step_square);
+                }
+            }
+
+            for (int attack_square : coordinates_white_pawn_pre_attacks[from_square])
+            {
+                U64 attack_mask = 1ULL << attack_square;
+                if (attack_mask & black_pieces_mask)
+                {
+                    white_pawn_moves.emplace_back(from_square, attack_square);
+                    squares_controlled |= attack_square;
+                }
+            }
+        }
+        return white_pawn_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_pawn_mask ^= from_mask;
+        current_pawn_mask ^= to_mask;
+
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        if (move_to_execute.second >= 56 && move_to_execute.second <= 63)
+        {
+            std::vector<std::pair<int, char>> promotion_choices;
+            promotion_choices.push_back({move_to_execute.second, 'Q'});
+            promotion_choices.push_back({move_to_execute.second, 'R'});
+            promotion_choices.push_back({move_to_execute.second, 'N'});
+            promotion_choices.push_back({move_to_execute.second, 'B'});
+
+            for (auto &promotion : promotion_choices)
+            {
+                char promotion_type = promotion.second;
+                U64 promotion_mask = 1ULL << promotion.first;
+
+                switch (promotion_type)
+                {
+                case 'Q':
+                    WhiteQueen::white_queens_mask |= promotion_mask;
+                    break;
+                case 'R':
+                    WhiteRook::white_rooks_mask |= promotion_mask;
+                    break;
+                case 'N':
+                    WhiteKnight::white_knights_mask |= promotion_mask;
+                    break;
+                case 'B':
+                    WhiteBishop::white_bishops_mask |= promotion_mask;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+                break;
+            }
+        }
+
+        return current_pawn_mask;
+    }
+};
+
+
+===== WhiteQueen.h =====
+#pragma once
+#include "Queen.h"
+#include "White.h"
+
+class WhiteQueen : public Queen, public White
+{
+private:
+    std::vector<int> linear_coordinates {3};
+    std::array<std::vector<int>, 64> coordinates_white_queens_pre_attacks;
+    std::vector<std::pair<int, int>> white_queens_moves{};
+
+public:
+    static bool isWhite;
+    static U64 white_queens_mask;
+
+    void CalculateWhiteQueensPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    if(each == -8 || each == 8){
+                        while(std::abs(from_file - to_file) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_white_queens_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else if(each == -1 || each == 1){
+                        while(std::abs(from_rank - to_rank) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_white_queens_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else
+                    {
+                        while(std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                        {
+                            coordinates_white_queens_pre_attacks.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateWhiteQueensMoves()
+    {
+        white_queens_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = coordinates_white_queens_pre_attacks.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    white_queens_moves.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+                else if (target_mask & black_pieces_mask)
+                {
+                    white_queens_moves.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+
+                    int current_direction = to_square - from_square;
+                   if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                   int current_direction = to_square - from_square;
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return white_queens_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_queen_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_queen_mask ^= from_mask;
+        from_square_queen_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_queen_mask;
+    }
+};
+
+
+===== WhiteRook.h =====
+#pragma once
+#include "Rook.h"
+#include "White.h"
+
+class WhiteRook : public Rook, public White
+{
+private:
+    std::vector<int> linear_coordinates {0, 7};
+    std::array<std::vector<int>, 64> coordinates_white_rooks_pre_attacks;
+    std::vector<std::pair<int, int>> white_rooks_moves{};
+
+public:
+    static U64 white_rooks_mask;
+
+    void CalculateWhiteRooksPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    
+                    while(((std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 0) || (std::abs(from_rank - to_rank) == 0 && std::abs(from_file - to_file) == 1)) && to_square >= 0 && to_square < 64)
+                    {
+                        coordinates_white_rooks_pre_attacks.at(i).push_back(to_square);
+                        to_square += each;
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateWhiteRooksMoves()
+    {
+        white_rooks_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = coordinates_white_rooks_pre_attacks.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    white_rooks_moves.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+                else if (target_mask & black_pieces_mask)
+                {
+                    white_rooks_moves.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+
+                    int current_direction = to_square - from_square;
+
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return white_rooks_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_rook_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_rook_mask ^= from_mask;
+        from_square_rook_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_rook_mask;
+    }
+};
+
+
+===== Bishop.h =====
+#pragma once
+#include "Piece.h"
+
+class Bishop : virtual public Piece
+{
+protected:
+    std::array<int, 4> possible_moves = {-9, -7, 7, 9};
+};
+
+
+===== Black.h =====
+#pragma once
+#include "Piece.h"
+
+class Black: virtual public Piece
+{
+protected:
+    const bool isWhite = false;
+};
+
+
+===== BlackBishop.h =====
+#pragma once
+#include "Bishop.h"
+
+class BlackBishop : public Bishop
+{
+public:
+    void CalculateBlackBishopsPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    while (std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                    {
+                        pre_attacks_coordinates.at(i).push_back(to_square);
+                        to_square += each;
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackBishopsMoves()
+    {
+        moves_vector.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto &attacks = pre_attacks_coordinates.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                }
+                else if (target_mask & white_pieces_mask)
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+
+                    int current_direction = to_square - from_square;
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) ==
+                               current_direction / std::abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) ==
+                               current_direction / std::abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return moves_vector;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_bishop_mask ^= from_mask;
+        from_square_bishop_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_bishop_mask;
+    }
+};
+
+
+===== BlackKing.h =====
+
+
+===== BlackKnight.h =====
+#pragma once
+#include "Knight.h"
+
+class BlackKnight : public Knight
+{
+public:
+    void CalculateBlackKnightsPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            for (int j = 0; j < 8; ++j)
+            {
+                int to_square = i + possible_moves[j];
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    int diff_rank = abs(from_rank - to_rank);
+                    int diff_file = abs(from_file - to_file);
+                    if (diff_file + diff_rank == 3 && diff_file > 0 && diff_rank > 0)
+                    {
+                        pre_attacks_coordinates[i].push_back(to_square);
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackKnightsMoves()
+    {
+        moves_vector.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : pre_attacks_coordinates[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if (!(target_mask & black_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                }
+            }
+        }
+        return moves_vector;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_knight_mask ^= from_mask;
+        current_knight_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return current_knight_mask;
+    }
+};
+
+
+===== BlackPawn.h =====
+#pragma once
+#include "Pawn.h"
+
+class BlackPawn : public Pawn, public Black
+{
+private:
+    std::array<U64, 64> black_pawn_pre_attacks;
+    std::array<U64, 64> black_pawn_pre_moves;
+    std::array<std::vector<int>, 64> coordinates_black_pawn_pre_moves;
+    std::vector<std::pair<int, int>> black_pawn_moves;
+
+public:
+    void CalculateBlackPawnsPreMoves()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int move = i - 8;
+            black_pawn_pre_moves[i] = 1ULL << move;
+            coordinates_black_pawn_pre_moves[i].push_back(move);
+
+            if (i / 8 == 6)
+            {
+                int double_step_move = i - 16;
+                int one_step_move = i - 8;
+
+                U64 one_step_mask = 1ULL << one_step_move;
+                U64 double_step_mask = 1ULL << double_step_move;
+
+                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                {
+                    black_pawn_pre_moves[i] |= double_step_mask;
+                    coordinates_black_pawn_pre_moves[i].push_back(double_step_move);
+                }
+            }
+        }
+    }
+
+    void CalculateBlackPawnsPreAttacks()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            if (from_file != 0)
+            {
+                int attack_left = i - 9;
+                if (attack_left >= 0 && attack_left < 64)
+                {
+                    black_pawn_pre_attacks[i] |= 1ULL << attack_left;
+                    pre_attacks_coordinates[i].push_back(attack_left);
+                }
+            }
+
+            if (from_file != 7)
+            {
+                int attack_right = i - 7;
+                if (attack_right >= 0 && attack_right < 64)
+                {
+                    black_pawn_pre_attacks[i] |= 1ULL << attack_right;
+                    pre_attacks_coordinates[i].push_back(attack_right);
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackPawnsMoves()
+    {
+        black_pawn_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : coordinates_black_pawn_pre_moves[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if (!(target_mask & all_pieces_mask))
+                {
+                    black_pawn_moves.emplace_back(from_square, to_square);
+                }
+            }
+
+            if (from_square / 8 == 6)
+            {
+                int one_step_square = from_square - 8;
+                int double_step_square = from_square - 16;
+
+                U64 one_step_mask = 1ULL << one_step_square;
+                U64 double_step_mask = 1ULL << double_step_square;
+
+                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                {
+                    black_pawn_moves.emplace_back(from_square, double_step_square);
+                }
+            }
+
+            for (int attack_square : pre_attacks_coordinates[from_square])
+            {
+                U64 attack_mask = 1ULL << attack_square;
+                if (attack_mask & white_pieces_mask)
+                {
+                    black_pawn_moves.emplace_back(from_square, attack_square);
+                }
+            }
+        }
+        return black_pawn_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_pawn_mask ^= from_mask;
+        current_pawn_mask ^= to_mask;
+
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        if (move_to_execute.second <= 7 && move_to_execute.second >= 0)
+        {
+            std::vector<std::pair<int, char>> promotion_choices;
+            promotion_choices.push_back({move_to_execute.second, 'Q'});
+            promotion_choices.push_back({move_to_execute.second, 'R'});
+            promotion_choices.push_back({move_to_execute.second, 'N'});
+            promotion_choices.push_back({move_to_execute.second, 'B'});
+
+            for (auto &promotion : promotion_choices)
+            {
+                char promotion_type = promotion.second;
+                U64 promotion_mask = 1ULL << promotion.first;
+
+                switch (promotion_type)
+                {
+                case 'Q':
+                    BlackQueen::black_queens_mask |= promotion_mask;
+                    break;
+                case 'R':
+                    BlackRook::black_rooks_mask |= promotion_mask;
+                    break;
+                case 'N':
+                    BlackKnight::black_knights_mask |= promotion_mask;
+                    break;
+                case 'B':
+                    BlackBishop::black_bishops_mask |= promotion_mask;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+                break;
+            }
+        }
+
+        return current_pawn_mask;
+    }
+};
+
+
+===== BlackQueen.h =====
+#pragma once
+#include "Queen.h"
+class BlackQueen : public Queen
+{
+public:
+    void CalculateBlackQueensPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    if (each == -8 || each == 8)
+                    {
+                        while (std::abs(from_file - to_file) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else if (each == -1 || each == 1)
+                    {
+                        while (std::abs(from_rank - to_rank) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else
+                    {
+                        while (std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackQueensMoves()
+    {
+        moves_vector.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto &attacks = pre_attacks_coordinates.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                }
+                else if (target_mask & white_pieces_mask)
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+
+                    int current_direction = to_square - from_square;
+                    if (current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+                    if (current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return moves_vector;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_queen_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_queen_mask ^= from_mask;
+        from_square_queen_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_queen_mask;
+    }
+};
+
+
+===== BlackRook.h =====
+#pragma once
+#include "Rook.h"
+
+class BlackRook : public Rook
+{
+public:
+    void CalculateBlackRooksPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    if (each == -8 || each == 8)
+                    {
+                        while (std::abs(from_file - to_file) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else
+                    {
+                        while (std::abs(from_rank - to_rank) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateBlackRooksMoves()
+    {
+        moves_vector.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto &attacks = pre_attacks_coordinates.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                }
+                else if (target_mask & white_pieces_mask)
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+
+                    int current_direction = to_square - from_square;
+
+                    if (current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+                    if (current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return moves_vector;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_rook_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_rook_mask ^= from_mask;
+        from_square_rook_mask ^= to_mask;
+        if (to_mask & white_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_rook_mask;
+    }
+};
+
+
+===== King.h =====
+#pragma once
+#include "Piece.h"
+
+class King : virtual public Piece
+{
+protected:
+    std::array<int, 8> possible_moves = {-9, -8, -7, -1, 1, 7, 8, 9};
+};
+
+
+===== Knight.h =====
+#pragma once
+#include "Piece.h"
+
+class Knight : virtual public Piece
+{
+protected:    
+    std::array<int, 8> possible_moves = {6, 15, 17, 10, -6, -15, -17, -10};
+};
+
+
+===== Pawn.h =====
+#pragma once
+#include "Piece.h"
+
+class Pawn : virtual public Piece
+{
+protected:
+
+};
+
+
+===== Piece.h =====
+#pragma once
+#include <array>
+#include <utility>
+#include <vector>
+#include <iostream>
+#include <utility>
+
+using U64 = unsigned long long;
+class Pawn;
+class Knight;
+class WhitePawn;
+
+class Piece
+{
+protected:
+    void MaskToCapture(U64 to_mask, bool isWhite);
+
+public:
+
+    std::array<std::vector<int>, 64> pre_attacks_coordinates;
+    static U64 bitboard;
+    static std::vector<int> linear_coordinates;
+    std::vector<std::pair<int, int>> moves_vector;
+
+    static U64 white_pieces_mask;
+    static U64 black_pieces_mask;
+    static U64 all_pieces_mask;
+    static U64 white_attacks_mask;
+    static U64 black_attacks_mask;
+
+};
+
+
+===== Queen.h =====
+#pragma once
+#include "Piece.h"
+
+class Queen : virtual public Piece
+{
+protected:
+    std::array<int, 8> possible_moves = {-9, -8, -7, -1, 1, 7, 8, 9};
+};
+
+
+===== Rook.h =====
+#pragma once
+#include "Piece.h"
+
+class Rook : virtual public Piece
+{
+protected:
+    std::array<int, 4> possible_moves = {-8, -1, 1, 8};
+};
+
+
+===== White.h =====
+#pragma once
+#include "Piece.h"
+
+class White: virtual public Piece
+{
+protected:
+    const bool isWhite = true;
+    U64 squares_controlled = 0;
+};
+
+
+===== WhiteBishop.h =====
+#pragma once
+#include "Bishop.h"
+#include "White.h"
+
+class WhiteBishop : public Bishop, public White
+{
+public:
+    void CalculateWhiteBishopsPreAttacks()
+    {        
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    while(std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                    {
+                        pre_attacks_coordinates.at(i).push_back(to_square);
+                        to_square += each;
+                    }
+                }
+            }    
+        }
+    }
+    std::vector<std::pair<int, int>> CalculateWhiteBishopsMoves()
+    {
+        moves_vector.clear();
+       
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = pre_attacks_coordinates.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+                
+                if(!(target_mask & all_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+                else if (target_mask & black_pieces_mask)
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+
+                    int current_direction = to_square - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i+1] - from_square) / abs(attacks[i+1] - from_square) == 
+                            current_direction / abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+                    
+                    while (i + 1 < attacks.size() && 
+                            (attacks[i+1] - from_square) / abs(attacks[i+1] - from_square) == 
+                            current_direction / abs(current_direction))
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return moves_vector;
+    }
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_bishop_mask ^= from_mask;
+        from_square_bishop_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for(int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if(linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+        return from_square_bishop_mask;
+    }
+};
+
+
+
+
+
+
+
+===== WhiteKing.h =====
+#pragma once
+#include "King.h"
+#include "White.h"
+
+class WhiteKing : public King, public White
+{
+public:
+    void CalculateWhiteKingPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            for (int j = 0; j < 8; ++j)
+            {
+                int to_square = i + possible_moves[j];
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    int diff_rank = abs(from_rank - to_rank);
+                    int diff_file = abs(from_file - to_file);
+                    if ((diff_file == 1 && diff_rank == 1) || (diff_file == 1 && diff_rank == 0) || (diff_file == 0 && diff_rank == 1))
+                    {
+                        pre_attacks_coordinates[i].push_back(to_square);
+                    }
+                }
+            }
+        }
+    }
+    std::vector<std::pair<int, int>> CalculateWhiteKingMoves()
+    {
+        moves_vector.clear();
+        
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : pre_attacks_coordinates[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if(!(target_mask & white_pieces_mask) && !(target_mask & black_attacks_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                }
+            }
+        }
+        return moves_vector;
+    }
+};
+
+
+
+
+
+
+
+===== WhiteKnight.h =====
+#pragma once
+#include "Knight.h"
+#include "White.h"
+
+class WhiteKnight : public Knight, public White
+{
+public:
+    void CalculateWhiteKnightsPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            for (int j = 0; j < 8; ++j)
+            {
+                int to_square = i + possible_moves[j];
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    int diff_rank = abs(from_rank - to_rank);
+                    int diff_file = abs(from_file - to_file);
+                    if (diff_file + diff_rank == 3 && diff_file > 0 && diff_rank > 0)
+                    {
+                        pre_attacks_coordinates[i].push_back(to_square);
+                    }
+                }
+            }
+        }
+    }
+    std::vector<std::pair<int, int>> CalculateWhiteKnightsMoves()
+    {
+        moves_vector.clear();
+        
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : pre_attacks_coordinates[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if(!(target_mask & white_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+            }
+        }
+        return moves_vector;
+    }
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_knight_mask ^= from_mask;
+        current_knight_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for(int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if(linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+        return current_knight_mask;
+    }
+};
+
+
+
+
+
+
+
+===== WhitePawn.h =====
+#pragma once
+#include "Pawn.h"
+#include "White.h"
+
+class WhitePawn : public Pawn, public White
+{
+private:
+    // std::vector<int> linear_coordinates{8, 9, 10, 11, 12, 13, 14, 15};
+    std::array<U64, 64> white_pawn_pre_attacks;
+    std::array<U64, 64> white_pawn_pre_moves;
+    std::array<std::vector<int>, 64> coordinates_white_pawn_pre_moves;
+    std::vector<std::pair<int, int>> white_pawn_moves;
+
+public:
+
+    void CalculateWhitePawnsPreMoves()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int move = i + 8;
+            white_pawn_pre_moves[i] = 1ULL << move;
+            coordinates_white_pawn_pre_moves[i].push_back(move);
+
+            if (i / 8 == 1)
+            {
+                int double_step_move = i + 16;
+                int one_step_move = i + 8;
+
+                if (!(white_pawn_pre_moves[i] & all_pieces_mask) && !(white_pawn_pre_moves[one_step_move] & all_pieces_mask))
+                {
+                    white_pawn_pre_moves[i] |= 1ULL << double_step_move;
+                    coordinates_white_pawn_pre_moves[i].push_back(double_step_move);
+                }
+            }
+        }
+    }
+
+    void CalculateWhitePawnsPreAttacks()
+    {
+        for (int i = 8; i < 56; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+
+            if (from_file != 0)
+            {
+                int attack_left = i + 7;
+                if (attack_left >= 0 && attack_left < 64)
+                {
+                    white_pawn_pre_attacks[i] |= 1ULL << attack_left;
+                    pre_attacks_coordinates[i].push_back(attack_left);
+                }
+            }
+
+            if (from_file != 7)
+            {
+                int attack_right = i + 9;
+                if (attack_right >= 0 && attack_right < 64)
+                {
+                    white_pawn_pre_attacks[i] |= 1ULL << attack_right;
+                    pre_attacks_coordinates[i].push_back(attack_right);
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateWhitePawnsMoves()
+    {
+        white_pawn_moves.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            for (int to_square : coordinates_white_pawn_pre_moves[from_square])
+            {
+                U64 target_mask = 1ULL << to_square;
+                if (!(target_mask & all_pieces_mask))
+                {
+                    white_pawn_moves.emplace_back(from_square, to_square);
+                }
+            }
+
+            if (from_square / 8 == 1)
+            {
+                int one_step_square = from_square + 8;
+                int double_step_square = from_square + 16;
+
+                U64 one_step_mask = 1ULL << one_step_square;
+                U64 double_step_mask = 1ULL << double_step_square;
+
+                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                {
+                    white_pawn_moves.emplace_back(from_square, double_step_square);
+                }
+            }
+
+            for (int attack_square : pre_attacks_coordinates[from_square])
+            {
+                U64 attack_mask = 1ULL << attack_square;
+                if (attack_mask & black_pieces_mask)
+                {
+                    white_pawn_moves.emplace_back(from_square, attack_square);
+                    squares_controlled |= attack_square;
+                }
+            }
+        }
+        return white_pawn_moves;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int> &linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        current_pawn_mask ^= from_mask;
+        current_pawn_mask ^= to_mask;
+
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, true);
+        }
+
+        if (move_to_execute.second >= 56 && move_to_execute.second <= 63)
+        {
+            std::vector<std::pair<int, char>> promotion_choices;
+            promotion_choices.push_back({move_to_execute.second, 'Q'});
+            promotion_choices.push_back({move_to_execute.second, 'R'});
+            promotion_choices.push_back({move_to_execute.second, 'N'});
+            promotion_choices.push_back({move_to_execute.second, 'B'});
+
+            for (auto &promotion : promotion_choices)
+            {
+                char promotion_type = promotion.second;
+                U64 promotion_mask = 1ULL << promotion.first;
+
+                switch (promotion_type)
+                {
+                case 'Q':
+                    WhiteQueen::white_queens_mask |= promotion_mask;
+                    break;
+                case 'R':
+                    WhiteRook::white_rooks_mask |= promotion_mask;
+                    break;
+                case 'N':
+                    WhiteKnight::white_knights_mask |= promotion_mask;
+                    break;
+                case 'B':
+                    WhiteBishop::white_bishops_mask |= promotion_mask;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+                break;
+            }
+        }
+
+        return current_pawn_mask;
+    }
+};
+
+
+
+
+
+
+===== WhiteQueen.h =====
+#pragma once
+#include "Queen.h"
+#include "White.h"
+
+class WhiteQueen : public Queen, public White
+{
+public:
+    void CalculateWhiteQueensPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+
+                    if(each == -8 || each == 8){
+                        while(std::abs(from_file - to_file) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else if(each == -1 || each == 1){
+                        while(std::abs(from_rank - to_rank) == 0 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                    else
+                    {
+                        while(std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                        {
+                            pre_attacks_coordinates.at(i).push_back(to_square);
+                            to_square += each;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateWhiteQueensMoves()
+    {
+        moves_vector.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = pre_attacks_coordinates.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+                else if (target_mask & black_pieces_mask)
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+
+                    int current_direction = to_square - from_square;
+                   if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                   int current_direction = to_square - from_square;
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return moves_vector;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_queen_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_queen_mask ^= from_mask;
+        from_square_queen_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_queen_mask;
+    }
+};
+
+
+
+
+
+
+
+===== WhiteRook.h =====
+#pragma once
+#include "Rook.h"
+#include "White.h"
+
+class WhiteRook : public Rook, public White
+{
+public:
+    void CalculateWhiteRooksPreAttacks()
+    {
+        for (int i = 0; i < 64; ++i)
+        {
+            int from_rank = i / 8;
+            int from_file = i % 8;
+            for (auto each : possible_moves)
+            {
+                int to_square = i + each;
+                if (to_square >= 0 && to_square < 64)
+                {
+                    int to_rank = to_square / 8;
+                    int to_file = to_square % 8;
+                    
+                    while(((std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 0) || (std::abs(from_rank - to_rank) == 0 && std::abs(from_file - to_file) == 1)) && to_square >= 0 && to_square < 64)
+                    {
+                        pre_attacks_coordinates.at(i).push_back(to_square);
+                        to_square += each;
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<std::pair<int, int>> CalculateWhiteRooksMoves()
+    {
+        moves_vector.clear();
+
+        for (int from_square : linear_coordinates)
+        {
+            const auto& attacks = pre_attacks_coordinates.at(from_square);
+            for (size_t i = 0; i < attacks.size(); ++i)
+            {
+                int to_square = attacks[i];
+                U64 target_mask = 1ULL << to_square;
+
+                if (!(target_mask & all_pieces_mask))
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+                }
+                else if (target_mask & black_pieces_mask)
+                {
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
+
+                    int current_direction = to_square - from_square;
+
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+                else
+                {
+                    int current_direction = to_square - from_square;
+                    if(current_direction > 1 || current_direction < -1)
+                    {
+                        current_direction = current_direction > 0 ? 8 : -8;
+                    }
+
+                    while (i + 1 < attacks.size() &&
+                            (attacks[i + 1] - from_square) / abs(current_direction) == 1)
+                    {
+                        ++i;
+                    }
+                }
+            }
+        }
+        return moves_vector;
+    }
+
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_rook_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_rook_mask ^= from_mask;
+        from_square_rook_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for (int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if (linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+
+        return from_square_rook_mask;
+    }
+};
+
+
+
+
+
+
+

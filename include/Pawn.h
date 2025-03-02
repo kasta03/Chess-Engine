@@ -1,8 +1,8 @@
 #pragma once
 #include "Piece.h"
 
-class Pawn : public Piece
+class Pawn : virtual public Piece
 {
-    public:
-    
+protected:
+
 };

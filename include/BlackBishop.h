@@ -3,19 +3,9 @@
 
 class BlackBishop : public Bishop
 {
-private:
-
-    std::vector<int> linear_coordinates{58, 61};
-    std::array<std::vector<int>, 64> coordinates_black_bishops_pre_attacks;
-    std::vector<std::pair<int, int>> black_bishops_moves{};
-
 public:
-
-    static bool isBlack;
-    static U64 black_bishops_mask;
-
     void CalculateBlackBishopsPreAttacks()
-    {        
+    {
         for (int i = 0; i < 64; ++i)
         {
             int from_rank = i / 8;
@@ -28,23 +18,23 @@ public:
                     int to_rank = to_square / 8;
                     int to_file = to_square % 8;
 
-                    while(std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
+                    while (std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 1 && to_square >= 0 && to_square < 64)
                     {
-                        coordinates_black_bishops_pre_attacks.at(i).push_back(to_square);
+                        pre_attacks_coordinates.at(i).push_back(to_square);
                         to_square += each;
                     }
                 }
-            }    
+            }
         }
     }
 
     std::vector<std::pair<int, int>> CalculateBlackBishopsMoves()
     {
-        black_bishops_moves.clear();
+        moves_vector.clear();
 
         for (int from_square : linear_coordinates)
         {
-            const auto& attacks = coordinates_black_bishops_pre_attacks.at(from_square);
+            const auto &attacks = pre_attacks_coordinates.at(from_square);
             for (size_t i = 0; i < attacks.size(); ++i)
             {
                 int to_square = attacks[i];
@@ -52,17 +42,17 @@ public:
 
                 if (!(target_mask & all_pieces_mask))
                 {
-                    black_bishops_moves.push_back(std::make_pair(from_square, to_square));
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
                 else if (target_mask & white_pieces_mask)
                 {
-                    black_bishops_moves.push_back(std::make_pair(from_square, to_square));
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
 
                     int current_direction = to_square - from_square;
-                    
-                    while (i + 1 < attacks.size() && 
-                            (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) == 
-                            current_direction / std::abs(current_direction))
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) ==
+                               current_direction / std::abs(current_direction))
                     {
                         ++i;
                     }
@@ -70,20 +60,20 @@ public:
                 else
                 {
                     int current_direction = to_square - from_square;
-                    
-                    while (i + 1 < attacks.size() && 
-                            (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) == 
-                            current_direction / std::abs(current_direction))
+
+                    while (i + 1 < attacks.size() &&
+                           (attacks[i + 1] - from_square) / std::abs(attacks[i + 1] - from_square) ==
+                               current_direction / std::abs(current_direction))
                     {
                         ++i;
                     }
                 }
             }
         }
-        return black_bishops_moves;
+        return moves_vector;
     }
 
-    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int>& linear_coordinates)
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int> &linear_coordinates)
     {
         U64 from_mask = 1ULL << move_to_execute.first;
         U64 to_mask = 1ULL << move_to_execute.second;

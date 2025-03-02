@@ -4,15 +4,7 @@
 
 class WhiteRook : public Rook, public White
 {
-private:
-    std::vector<int> linear_coordinates {0, 7};
-    std::array<std::vector<int>, 64> coordinates_white_rooks_pre_attacks;
-    std::vector<std::pair<int, int>> white_rooks_moves{};
-
 public:
-    static bool isWhite;
-    static U64 white_rooks_mask;
-
     void CalculateWhiteRooksPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -29,7 +21,7 @@ public:
                     
                     while(((std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 0) || (std::abs(from_rank - to_rank) == 0 && std::abs(from_file - to_file) == 1)) && to_square >= 0 && to_square < 64)
                     {
-                        coordinates_white_rooks_pre_attacks.at(i).push_back(to_square);
+                        pre_attacks_coordinates.at(i).push_back(to_square);
                         to_square += each;
                     }
                 }
@@ -39,11 +31,11 @@ public:
 
     std::vector<std::pair<int, int>> CalculateWhiteRooksMoves()
     {
-        white_rooks_moves.clear();
+        moves_vector.clear();
 
         for (int from_square : linear_coordinates)
         {
-            const auto& attacks = coordinates_white_rooks_pre_attacks.at(from_square);
+            const auto& attacks = pre_attacks_coordinates.at(from_square);
             for (size_t i = 0; i < attacks.size(); ++i)
             {
                 int to_square = attacks[i];
@@ -51,11 +43,13 @@ public:
 
                 if (!(target_mask & all_pieces_mask))
                 {
-                    white_rooks_moves.push_back(std::make_pair(from_square, to_square));
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
                 }
                 else if (target_mask & black_pieces_mask)
                 {
-                    white_rooks_moves.push_back(std::make_pair(from_square, to_square));
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
 
                     int current_direction = to_square - from_square;
 
@@ -86,7 +80,7 @@ public:
                 }
             }
         }
-        return white_rooks_moves;
+        return moves_vector;
     }
 
     U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_rook_mask, std::vector<int>& linear_coordinates)
@@ -111,3 +105,8 @@ public:
         return from_square_rook_mask;
     }
 };
+
+
+
+
+

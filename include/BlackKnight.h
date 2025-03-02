@@ -3,16 +3,7 @@
 
 class BlackKnight : public Knight
 {
-private:
-    std::vector<int> linear_coordinates{57, 62};
-    std::array<U64, 64> black_knights_pre_attacks;
-    std::array<std::vector<int>, 64> coordinates_black_knights_pre_attacks;
-    std::vector<std::pair<int, int>> black_knights_moves{};
-
 public:
-    static bool isBlack;
-    static U64 black_knights_mask;
-
     void CalculateBlackKnightsPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -31,8 +22,7 @@ public:
                     int diff_file = abs(from_file - to_file);
                     if (diff_file + diff_rank == 3 && diff_file > 0 && diff_rank > 0)
                     {
-                        black_knights_pre_attacks[i] |= 1ULL << (to_square);
-                        coordinates_black_knights_pre_attacks[i].push_back(to_square);
+                        pre_attacks_coordinates[i].push_back(to_square);
                     }
                 }
             }
@@ -41,23 +31,23 @@ public:
 
     std::vector<std::pair<int, int>> CalculateBlackKnightsMoves()
     {
-        black_knights_moves.clear();
+        moves_vector.clear();
 
         for (int from_square : linear_coordinates)
         {
-            for (int to_square : coordinates_black_knights_pre_attacks[from_square])
+            for (int to_square : pre_attacks_coordinates[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
                 if (!(target_mask & black_pieces_mask))
                 {
-                    black_knights_moves.push_back(std::make_pair(from_square, to_square));
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
             }
         }
-        return black_knights_moves;
+        return moves_vector;
     }
 
-    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates)
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int> &linear_coordinates)
     {
         U64 from_mask = 1ULL << move_to_execute.first;
         U64 to_mask = 1ULL << move_to_execute.second;

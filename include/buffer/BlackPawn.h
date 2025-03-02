@@ -1,13 +1,13 @@
 #pragma once
 #include "Pawn.h"
 
-class BlackPawn : public Pawn, public Black
+class BlackPawn : public Pawn
 {
 private:
     std::array<U64, 64> black_pawn_pre_attacks;
-    std::array<U64, 64> black_pawn_pre_moves;
-    std::array<std::vector<int>, 64> coordinates_black_pawn_pre_moves;
-    std::vector<std::pair<int, int>> black_pawn_moves;
+    std::array<U64, 64> moves_vector;
+    std::array<std::vector<int>, 64> moves_vector;
+    std::vector<std::pair<int, int>> moves_vector;
 
 public:
     void CalculateBlackPawnsPreMoves()
@@ -15,8 +15,8 @@ public:
         for (int i = 8; i < 56; ++i)
         {
             int move = i - 8;
-            black_pawn_pre_moves[i] = 1ULL << move;
-            coordinates_black_pawn_pre_moves[i].push_back(move);
+            moves_vector[i] = 1ULL << move;
+            moves_vector[i].push_back(move);
 
             if (i / 8 == 6)
             {
@@ -28,8 +28,8 @@ public:
 
                 if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
                 {
-                    black_pawn_pre_moves[i] |= double_step_mask;
-                    coordinates_black_pawn_pre_moves[i].push_back(double_step_move);
+                    moves_vector[i] |= double_step_mask;
+                    moves_vector[i].push_back(double_step_move);
                 }
             }
         }
@@ -66,16 +66,16 @@ public:
 
     std::vector<std::pair<int, int>> CalculateBlackPawnsMoves()
     {
-        black_pawn_moves.clear();
+        moves_vector.clear();
 
         for (int from_square : linear_coordinates)
         {
-            for (int to_square : coordinates_black_pawn_pre_moves[from_square])
+            for (int to_square : moves_vector[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
                 if (!(target_mask & all_pieces_mask))
                 {
-                    black_pawn_moves.emplace_back(from_square, to_square);
+                    moves_vector.emplace_back(from_square, to_square);
                 }
             }
 
@@ -89,7 +89,7 @@ public:
 
                 if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
                 {
-                    black_pawn_moves.emplace_back(from_square, double_step_square);
+                    moves_vector.emplace_back(from_square, double_step_square);
                 }
             }
 
@@ -98,11 +98,11 @@ public:
                 U64 attack_mask = 1ULL << attack_square;
                 if (attack_mask & white_pieces_mask)
                 {
-                    black_pawn_moves.emplace_back(from_square, attack_square);
+                    moves_vector.emplace_back(from_square, attack_square);
                 }
             }
         }
-        return black_pawn_moves;
+        return moves_vector;
     }
 
     U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int> &linear_coordinates)
@@ -160,3 +160,4 @@ public:
         return current_pawn_mask;
     }
 };
+

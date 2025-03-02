@@ -1,9 +1,8 @@
 #pragma once
 #include "Piece.h"
 
-class Bishop : public Piece
+class Bishop : virtual public Piece
 {
-
-    public:
+protected:
     std::array<int, 4> possible_moves = {-9, -7, 7, 9};
 };

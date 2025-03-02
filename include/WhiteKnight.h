@@ -4,16 +4,7 @@
 
 class WhiteKnight : public Knight, public White
 {
-private:
-    std::vector<int> linear_coordinates {1, 6};
-    std::array<U64, 64> white_knights_pre_attacks;
-    std::array<std::vector<int>, 64> coordinates_white_knights_pre_attacks;
-    std::vector<std::pair<int, int>> white_knights_moves{};
-
 public:
-    static bool isWhite;
-    static U64 white_knights_mask;
-    
     void CalculateWhiteKnightsPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -32,8 +23,7 @@ public:
                     int diff_file = abs(from_file - to_file);
                     if (diff_file + diff_rank == 3 && diff_file > 0 && diff_rank > 0)
                     {
-                        white_knights_pre_attacks[i] |= 1ULL << (to_square);
-                        coordinates_white_knights_pre_attacks[i].push_back(to_square);
+                        pre_attacks_coordinates[i].push_back(to_square);
                     }
                 }
             }
@@ -41,21 +31,21 @@ public:
     }
     std::vector<std::pair<int, int>> CalculateWhiteKnightsMoves()
     {
-        white_knights_moves.clear();
+        moves_vector.clear();
         
         for (int from_square : linear_coordinates)
         {
-            for (int to_square : coordinates_white_knights_pre_attacks[from_square])
+            for (int to_square : pre_attacks_coordinates[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
                 if(!(target_mask & white_pieces_mask))
                 {
-                    white_knights_moves.push_back(std::make_pair(from_square, to_square));
-                    white_knights_control_mask |= target_mask;
+                    moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
                 }
             }
         }
-        return white_knights_moves;
+        return moves_vector;
     }
     U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates)
     {
@@ -78,3 +68,8 @@ public:
         return current_knight_mask;
     }
 };
+
+
+
+
+

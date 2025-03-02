@@ -5,16 +5,13 @@
 class WhitePawn : public Pawn, public White
 {
 private:
-    std::vector<int> linear_coordinates{8, 9, 10, 11, 12, 13, 14, 15};
+    // std::vector<int> linear_coordinates{8, 9, 10, 11, 12, 13, 14, 15};
     std::array<U64, 64> white_pawn_pre_attacks;
     std::array<U64, 64> white_pawn_pre_moves;
-    std::array<std::vector<int>, 64> coordinates_white_pawn_pre_attacks;
     std::array<std::vector<int>, 64> coordinates_white_pawn_pre_moves;
     std::vector<std::pair<int, int>> white_pawn_moves;
 
 public:
-    static bool isWhite;
-    static U64 white_pawns_mask;
 
     void CalculateWhitePawnsPreMoves()
     {
@@ -51,7 +48,7 @@ public:
                 if (attack_left >= 0 && attack_left < 64)
                 {
                     white_pawn_pre_attacks[i] |= 1ULL << attack_left;
-                    coordinates_white_pawn_pre_attacks[i].push_back(attack_left);
+                    pre_attacks_coordinates[i].push_back(attack_left);
                 }
             }
 
@@ -61,7 +58,7 @@ public:
                 if (attack_right >= 0 && attack_right < 64)
                 {
                     white_pawn_pre_attacks[i] |= 1ULL << attack_right;
-                    coordinates_white_pawn_pre_attacks[i].push_back(attack_right);
+                    pre_attacks_coordinates[i].push_back(attack_right);
                 }
             }
         }
@@ -96,12 +93,13 @@ public:
                 }
             }
 
-            for (int attack_square : coordinates_white_pawn_pre_attacks[from_square])
+            for (int attack_square : pre_attacks_coordinates[from_square])
             {
                 U64 attack_mask = 1ULL << attack_square;
                 if (attack_mask & black_pieces_mask)
                 {
                     white_pawn_moves.emplace_back(from_square, attack_square);
+                    squares_controlled |= attack_square;
                 }
             }
         }
@@ -163,3 +161,7 @@ public:
         return current_pawn_mask;
     }
 };
+
+
+
+

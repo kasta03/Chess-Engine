@@ -1,7 +1,9 @@
 #pragma once
 #include "Piece.h"
 
-class White: public Piece
+class White: virtual public Piece
 {
-    bool isWhite = true;
+protected:
+    const bool isWhite = true;
+    U64 squares_controlled = 0;
 };
