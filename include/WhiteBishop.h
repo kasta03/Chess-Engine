@@ -1,7 +1,8 @@
 #pragma once
 #include "Bishop.h"
+#include "White.h"
 
-class WhiteBishop : public Bishop
+class WhiteBishop : public Bishop, public White
 {
 private:
 

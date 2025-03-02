@@ -1,7 +1,8 @@
 #pragma once
 #include "Rook.h"
+#include "White.h"
 
-class WhiteRook : public Rook
+class WhiteRook : public Rook, public White
 {
 private:
     std::vector<int> linear_coordinates {0, 7};
@@ -25,21 +26,11 @@ public:
                 {
                     int to_rank = to_square / 8;
                     int to_file = to_square % 8;
-
-                    if(each == -8 || each == 8){
-                        while(std::abs(from_file - to_file) == 0 && to_square >= 0 && to_square < 64)
-                        {
-                            coordinates_white_rooks_pre_attacks.at(i).push_back(to_square);
-                            to_square += each;
-                        }
-                    }
-                    else
+                    
+                    while(((std::abs(from_rank - to_rank) == 1 && std::abs(from_file - to_file) == 0) || (std::abs(from_rank - to_rank) == 0 && std::abs(from_file - to_file) == 1)) && to_square >= 0 && to_square < 64)
                     {
-                        while(std::abs(from_rank - to_rank) == 0 && to_square >= 0 && to_square < 64)
-                        {
-                            coordinates_white_rooks_pre_attacks.at(i).push_back(to_square);
-                            to_square += each;
-                        }
+                        coordinates_white_rooks_pre_attacks.at(i).push_back(to_square);
+                        to_square += each;
                     }
                 }
             }

@@ -1,7 +1,8 @@
 #pragma once
 #include "Knight.h"
+#include "White.h"
 
-class WhiteKnight : public Knight
+class WhiteKnight : public Knight, public White
 {
 private:
     std::vector<int> linear_coordinates {1, 6};
@@ -50,6 +51,7 @@ public:
                 if(!(target_mask & white_pieces_mask))
                 {
                     white_knights_moves.push_back(std::make_pair(from_square, to_square));
+                    white_knights_control_mask |= target_mask;
                 }
             }
         }

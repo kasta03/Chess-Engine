@@ -1,7 +1,8 @@
 #pragma once
 #include "Queen.h"
+#include "White.h"
 
-class WhiteQueen : public Queen
+class WhiteQueen : public Queen, public White
 {
 private:
     std::vector<int> linear_coordinates {3};

@@ -12,12 +12,13 @@ class WhitePawn;
 
 class Piece
 {
-    protected:
-        
-        U64 white_pieces_mask = 0;
-        U64 black_pieces_mask = 0;
-        U64 all_pieces_mask = white_pieces_mask | black_pieces_mask;
-        void MaskToCapture(U64 to_mask, bool isWhite);
-    public:
+protected:
+    void MaskToCapture(U64 to_mask, bool isWhite);
+public:
+    static U64 white_pieces_mask;
+    static U64 black_pieces_mask;
+    static U64 all_pieces_mask;
+    static U64 white_attacks_mask;
+    static U64 black_attacks_mask;
 
 };

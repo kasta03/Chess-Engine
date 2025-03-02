@@ -1,7 +1,8 @@
 #pragma once
 #include "Pawn.h"
+#include "White.h"
 
-class WhitePawn : public Pawn
+class WhitePawn : public Pawn, public White
 {
 private:
     std::vector<int> linear_coordinates{8, 9, 10, 11, 12, 13, 14, 15};
