@@ -1,10 +1,7 @@
-# Ustawienie ścieżki do folderu, w którym znajdują się pliki .h
-$folderPath = "."  # Zmień na właściwą ścieżkę
+$folderPath = "."
 
-# Ustawienie nazwy pliku wynikowego
-$outputFile = "output.txt"  # Zmień na właściwą ścieżkę
+$outputFile = "output.txt"
 
-# Pobranie wszystkich plików .h i zapisanie ich treści do jednego pliku
 Get-ChildItem -Path $folderPath -Filter "*.h" | ForEach-Object {
     Add-Content -Path $outputFile -Value "===== $_ ====="
     Get-Content $_.FullName | Add-Content -Path $outputFile
