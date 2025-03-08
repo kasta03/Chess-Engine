@@ -1,11 +1,11 @@
 #pragma once
 #include "Piece.h"
 
-U64 Piece::bitboard = WhitePawn::bitboard | WhiteKnight::bitboard | WhiteBishop::bitboard | WhiteRook::bitboard | WhiteQueen::bitboard | WhiteKing::bitboard;
-U64 Piece::bitboard = BlackPawn::bitboard | BlackKnight::bitboard | BlackBishop::bitboard | BlackRook::bitboard | BlackQueen::bitboard | BlackKing::bitboard;
-U64 Piece::bitboard = Piece::white_pieces_mask | Piece::black_pieces_mask;
+U64 Piece::white_bitboard = WhitePawn::bitboard | WhiteKnight::bitboard | WhiteBishop::bitboard | WhiteRook::bitboard | WhiteQueen::bitboard | WhiteKing::bitboard;
+U64 Piece::black_bitboard = BlackPawn::bitboard | BlackKnight::bitboard | BlackBishop::bitboard | BlackRook::bitboard | BlackQueen::bitboard | BlackKing::bitboard;
+U64 Piece::whole_bitboard = Piece::white_bitboard | Piece::black_bitboard;
 
-void MaskToCapture(U64 to_mask, bool isWhite)
+void Piece::MaskToCapture(U64 to_mask, bool isWhite)
 {
     if(isWhite)
     {

@@ -6,26 +6,18 @@
 #include <utility>
 
 using U64 = unsigned long long;
-class Pawn;
-class Knight;
-class WhitePawn;
 
 class Piece
 {
-protected:
-    void MaskToCapture(U64 to_mask, bool isWhite);
-
 public:
-
+    static void MaskToCapture(U64 to_mask, bool isWhite);
     std::array<std::vector<int>, 64> pre_attacks_coordinates;
     static U64 bitboard;
     static std::vector<int> linear_coordinates;
     std::vector<std::pair<int, int>> moves_vector;
 
-    static U64 white_pieces_mask;
-    static U64 black_pieces_mask;
-    static U64 all_pieces_mask;
-    static U64 white_attacks_mask;
-    static U64 black_attacks_mask;
-
+    static U64 white_bitboard;
+    static U64 black_bitboard;
+    static U64 whole_bitboard;
+    
 };

@@ -38,13 +38,34 @@ public:
             for (int to_square : pre_attacks_coordinates[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if(!(target_mask & white_pieces_mask) && !(target_mask & black_attacks_mask))
+                if(!(target_mask & white_pieces_mask) && !(target_mask & Black::squares_controlled))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
+                    squares_controlled |= target_mask;
                 }
             }
         }
         return moves_vector;
+    }
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_king_mask, std::vector<int>& linear_coordinates)
+    {
+        U64 from_mask = 1ULL << move_to_execute.first;
+        U64 to_mask = 1ULL << move_to_execute.second;
+        from_square_king_mask ^= from_mask;
+        from_square_king_mask ^= to_mask;
+        if (to_mask & black_pieces_mask)
+        {
+            MaskToCapture(to_mask, false);
+        }
+
+        for(int i = 0; i < linear_coordinates.size(); ++i)
+        {
+            if(linear_coordinates.at(i) == move_to_execute.first)
+            {
+                linear_coordinates.at(i) = move_to_execute.second;
+            }
+        }
+        return from_square_king_mask;
     }
 };
 
