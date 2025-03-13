@@ -1,4 +1,3 @@
-#pragma once
 #include "WhiteBishop.h"
 
 bool WhiteBishop::isWhite = true;

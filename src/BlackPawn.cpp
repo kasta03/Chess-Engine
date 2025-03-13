@@ -1,4 +1,3 @@
-#pragma once
 #include "BlackPawn.h"
 
 bool BlackPawn::isWhite = false;

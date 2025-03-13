@@ -1,4 +1,3 @@
-#pragma once
 #include "WhiteKnight.h"
 
 bool WhiteKnight::isWhite = true;

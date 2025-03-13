@@ -1,4 +1,3 @@
-#pragma once
 #include "WhiteQueen.h"
 
 bool WhiteQueen::isWhite = true;

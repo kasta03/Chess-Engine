@@ -1,4 +1,3 @@
-#pragma once
 #include "WhiteRook.h"
 
 bool WhiteRook::isWhite = true;

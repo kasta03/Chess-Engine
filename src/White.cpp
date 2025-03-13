@@ -1,4 +1,3 @@
-#pragma once
 #include "White.h"
 
 U64 White::squares_controlled = 0;

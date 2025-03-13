@@ -1,4 +1,3 @@
-#pragma once
 #include "BlackRook.h"
 
 bool BlackRook::isBlack = false;

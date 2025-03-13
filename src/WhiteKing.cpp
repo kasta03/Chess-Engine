@@ -1,4 +1,3 @@
-#pragma once
 #include "WhiteKing.h"
 
 bool isWhite = true;

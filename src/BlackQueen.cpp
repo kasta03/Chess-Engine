@@ -1,4 +1,3 @@
-#pragma once
 #include "BlackQueen.h"
 
 bool BlackQueen::isBlack = false;

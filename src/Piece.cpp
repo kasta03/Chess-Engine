@@ -1,4 +1,3 @@
-#pragma once
 #include "Piece.h"
 
 U64 Piece::white_bitboard = WhitePawn::bitboard | WhiteKnight::bitboard | WhiteBishop::bitboard | WhiteRook::bitboard | WhiteQueen::bitboard | WhiteKing::bitboard;
