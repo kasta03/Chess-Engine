@@ -1,0 +1,3 @@
+C:/Users/kstar/Documents/PROJECTS/AI_CHESS/build/CMakeFiles/Project.dir
+C:/Users/kstar/Documents/PROJECTS/AI_CHESS/build/CMakeFiles/edit_cache.dir
+C:/Users/kstar/Documents/PROJECTS/AI_CHESS/build/CMakeFiles/rebuild_cache.dir
