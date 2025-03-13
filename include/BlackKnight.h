@@ -38,7 +38,7 @@ public:
             for (int to_square : pre_attacks_coordinates[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if (!(target_mask & black_pieces_mask))
+                if (!(target_mask & black_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
@@ -53,7 +53,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         current_knight_mask ^= from_mask;
         current_knight_mask ^= to_mask;
-        if (to_mask & white_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, true);
         }

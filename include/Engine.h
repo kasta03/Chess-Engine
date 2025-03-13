@@ -15,6 +15,7 @@
 
 class Engine
 {
+    int isMove = 1;
     const std::array<float, 64> knight_table = {
         2.5, 2.7, 2.9, 2.9, 2.9, 2.9, 2.7, 2.5,
         2.7, 2.9, 3.0, 3.0, 3.0, 3.0, 2.9, 2.7,
@@ -192,6 +193,6 @@ public:
                 linear_coordinates.at(i) = move_to_execute.second;
             }
         }
+        isMove ^= 1;
     }
-    
 };  

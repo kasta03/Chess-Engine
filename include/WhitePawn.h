@@ -26,7 +26,7 @@ public:
                 int double_step_move = i + 16;
                 int one_step_move = i + 8;
 
-                if (!(white_pawn_pre_moves[i] & all_pieces_mask) && !(white_pawn_pre_moves[one_step_move] & all_pieces_mask))
+                if (!(white_pawn_pre_moves[i] & whole_bitboard) && !(white_pawn_pre_moves[one_step_move] & whole_bitboard))
                 {
                     white_pawn_pre_moves[i] |= 1ULL << double_step_move;
                     coordinates_white_pawn_pre_moves[i].push_back(double_step_move);
@@ -73,7 +73,7 @@ public:
             for (int to_square : coordinates_white_pawn_pre_moves[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     white_pawn_moves.emplace_back(from_square, to_square);
                 }
@@ -87,7 +87,7 @@ public:
                 U64 one_step_mask = 1ULL << one_step_square;
                 U64 double_step_mask = 1ULL << double_step_square;
 
-                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                if (!(one_step_mask & whole_bitboard) && !(double_step_mask & whole_bitboard))
                 {
                     white_pawn_moves.emplace_back(from_square, double_step_square);
                 }
@@ -96,7 +96,7 @@ public:
             for (int attack_square : pre_attacks_coordinates[from_square])
             {
                 U64 attack_mask = 1ULL << attack_square;
-                if (attack_mask & black_pieces_mask)
+                if (attack_mask & black_bitboard)
                 {
                     white_pawn_moves.emplace_back(from_square, attack_square);
                     squares_controlled |= attack_square;
@@ -113,7 +113,7 @@ public:
         current_pawn_mask ^= from_mask;
         current_pawn_mask ^= to_mask;
 
-        if (to_mask & black_pieces_mask)
+        if (to_mask & black_bitboard)
         {
             MaskToCapture(to_mask, true);
         }
@@ -131,21 +131,21 @@ public:
                 char promotion_type = promotion.second;
                 U64 promotion_mask = 1ULL << promotion.first;
 
-                switch (promotion_type)
-                {
-                case 'Q':
-                    WhiteQueen::white_queens_mask |= promotion_mask;
-                    break;
-                case 'R':
-                    WhiteRook::white_rooks_mask |= promotion_mask;
-                    break;
-                case 'N':
-                    WhiteKnight::white_knights_mask |= promotion_mask;
-                    break;
-                case 'B':
-                    WhiteBishop::white_bishops_mask |= promotion_mask;
-                    break;
-                }
+                // switch (promotion_type)
+                // {
+                // case 'Q':
+                //     WhiteQueen::white_queens_mask |= promotion_mask;
+                //     break;
+                // case 'R':
+                //     WhiteRook::white_rooks_mask |= promotion_mask;
+                //     break;
+                // case 'N':
+                //     WhiteKnight::white_knights_mask |= promotion_mask;
+                //     break;
+                // case 'B':
+                //     WhiteBishop::white_bishops_mask |= promotion_mask;
+                //     break;
+                // }
             }
         }
 

@@ -1,5 +1,4 @@
 #include "BlackQueen.h"
 
-bool BlackQueen::isBlack = false;
-U64 BlackQueen::bitboard = 00001000 << 56;
-std::vector<int> BlackQueen::linear_coordinates = {59};
+U64 bitboard = U64(0b00001000) << 56;
+std::vector<int> linear_coordinates = {59};

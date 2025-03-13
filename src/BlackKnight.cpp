@@ -1,5 +1,4 @@
 #include "BlackKnight.h"
 
-bool BlackKnight::isWhite = false;
-U64 BlackKnight::bitboard = 0b10000010 << 56;
-std::vector<int> BlackKnight::linear_coordinates = {57, 62};
+U64 bitboard = U64(0b01000010) << 56;
+std::vector<int> linear_coordinates = {57, 62};

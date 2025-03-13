@@ -1,69 +1,42 @@
 #include "Piece.h"
 
-U64 Piece::white_bitboard = WhitePawn::bitboard | WhiteKnight::bitboard | WhiteBishop::bitboard | WhiteRook::bitboard | WhiteQueen::bitboard | WhiteKing::bitboard;
-U64 Piece::black_bitboard = BlackPawn::bitboard | BlackKnight::bitboard | BlackBishop::bitboard | BlackRook::bitboard | BlackQueen::bitboard | BlackKing::bitboard;
-U64 Piece::whole_bitboard = Piece::white_bitboard | Piece::black_bitboard;
+std::vector<Piece*> Piece::white_pieces;
+std::vector<Piece*> Piece::black_pieces;
+
+U64 Piece::white_bitboard = 0;
+U64 Piece::black_bitboard = 0;
+U64 Piece::whole_bitboard = 0;
+
+void Piece::InitializeBitboards()
+{
+    white_bitboard = 0;
+    black_bitboard = 0;
+    
+    for (Piece* piece : white_pieces)
+    {
+        white_bitboard |= piece->bitboard;
+    }
+    
+    for (Piece* piece : black_pieces)
+    {
+        black_bitboard |= piece->bitboard;
+    }
+    
+    whole_bitboard = white_bitboard | black_bitboard;
+}
 
 void Piece::MaskToCapture(U64 to_mask, bool isWhite)
 {
-    if(isWhite)
+    std::vector<Piece*>& pieces = isWhite ? white_pieces : black_pieces;
+    
+    for (auto it = pieces.begin(); it != pieces.end(); ++it)
     {
-        for (int i = 0; i < 6; ++i)
+        if ((*it)->bitboard & to_mask)
         {
-            if (to_mask & WhitePawn::bitboard)
-            {
-                WhitePawn::bitboard ^ to_mask;
-            }
-            else if (to_mask & WhiteKnight::bitboard)
-            {
-                WhiteKnight::bitboard ^ to_mask;
-            }
-            else if (to_mask & WhiteBishop::bitboard)
-            {
-                WhiteBishop::bitboard ^ to_mask;
-            }
-            else if (to_mask & WhiteRook::bitboard)
-            {
-                WhiteRook::bitboard ^ to_mask;
-            }
-            else if (to_mask & WhiteQueen::bitboard)
-            {
-                WhiteQueen::bitboard ^ to_mask;
-            }
-            else if (to_mask & WhiteKing::bitboard)
-            {
-                WhiteKing::bitboard ^ to_mask;
-            }
+            (*it)->bitboard ^= to_mask;
+            break;
         }
     }
-    else
-    {
-        for (int i = 0; i < 6; ++i)
-        {
-            if (to_mask & BlackPawn::bitboard)
-            {
-                BlackPawn::bitboard ^ to_mask;
-            }
-            else if (to_mask & BlackKnight::bitboard)
-            {
-                BlackKnight::bitboard ^ to_mask;
-            }
-            else if (to_mask & BlackBishop::bitboard)
-            {
-                BlackBishop::bitboard ^ to_mask;
-            }
-            else if (to_mask & BlackRook::bitboard)
-            {
-                BlackRook::bitboard ^ to_mask;
-            }
-            else if (to_mask & BlackQueen::bitboard)
-            {
-                BlackQueen::bitboard ^ to_mask;
-            }
-            else if (to_mask & BlackKing::bitboard)
-            {
-                BlackKing::bitboard ^ to_mask;
-            }
-        }
-    }
+    
+    InitializeBitboards();
 }

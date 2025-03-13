@@ -40,11 +40,11 @@ public:
                 int to_square = attacks[i];
                 U64 target_mask = 1ULL << to_square;
 
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
-                else if (target_mask & white_pieces_mask)
+                else if (target_mask & white_bitboard)
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
 
@@ -79,7 +79,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         from_square_bishop_mask ^= from_mask;
         from_square_bishop_mask ^= to_mask;
-        if (to_mask & white_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, true);
         }

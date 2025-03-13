@@ -1,8 +1,7 @@
 #include "WhitePawn.h"
 
-bool WhitePawn::isWhite = true;
-U64 WhitePawn::bitboard = 0b11111111 << 8;
-std::vector<int> WhitePawn::linear_coordinates = {8, 9, 10, 11, 12, 13, 14, 15};
+U64 bitboard = U64(11111111) << 8;
+std::vector<int> linear_coordinates = {8, 9, 10, 11, 12, 13, 14, 15};
 
 // void WhitePawn::getPawnsPositions()
 // {

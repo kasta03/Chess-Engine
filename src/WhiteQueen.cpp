@@ -1,5 +1,4 @@
 #include "WhiteQueen.h"
 
-bool WhiteQueen::isWhite = true;
-U64 WhiteQueen::bitboard = 0b00001000;
-std::vector<int> WhiteQueen::linear_coordinates = {3};
+U64 bitboard = U64(0b00001000) << 0;
+std::vector<int> linear_coordinates = {3};
