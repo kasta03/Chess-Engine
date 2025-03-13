@@ -67,11 +67,11 @@ public:
                 int to_square = attacks[i];
                 U64 target_mask = 1ULL << to_square;
 
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
-                else if (target_mask & white_pieces_mask)
+                else if (target_mask & white_bitboard)
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
 
@@ -106,7 +106,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         from_square_bishop_mask ^= from_mask;
         from_square_bishop_mask ^= to_mask;
-        if (to_mask & white_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, true);
         }
@@ -238,7 +238,7 @@ public:
             for (int to_square : pre_attacks_coordinates[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if (!(target_mask & black_pieces_mask))
+                if (!(target_mask & black_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
@@ -253,7 +253,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         current_knight_mask ^= from_mask;
         current_knight_mask ^= to_mask;
-        if (to_mask & white_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, true);
         }
@@ -274,6 +274,7 @@ public:
 ===== BlackPawn.h =====
 #pragma once
 #include "Pawn.h"
+#include "Black.h"
 
 class BlackPawn : public Pawn, public Black
 {
@@ -300,7 +301,7 @@ public:
                 U64 one_step_mask = 1ULL << one_step_move;
                 U64 double_step_mask = 1ULL << double_step_move;
 
-                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                if (!(one_step_mask & whole_bitboard) && !(double_step_mask & whole_bitboard))
                 {
                     black_pawn_pre_moves[i] |= double_step_mask;
                     coordinates_black_pawn_pre_moves[i].push_back(double_step_move);
@@ -347,7 +348,7 @@ public:
             for (int to_square : coordinates_black_pawn_pre_moves[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     black_pawn_moves.emplace_back(from_square, to_square);
                 }
@@ -361,7 +362,7 @@ public:
                 U64 one_step_mask = 1ULL << one_step_square;
                 U64 double_step_mask = 1ULL << double_step_square;
 
-                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                if (!(one_step_mask & whole_bitboard) && !(double_step_mask & whole_bitboard))
                 {
                     black_pawn_moves.emplace_back(from_square, double_step_square);
                 }
@@ -370,7 +371,7 @@ public:
             for (int attack_square : pre_attacks_coordinates[from_square])
             {
                 U64 attack_mask = 1ULL << attack_square;
-                if (attack_mask & white_pieces_mask)
+                if (attack_mask & white_bitboard)
                 {
                     black_pawn_moves.emplace_back(from_square, attack_square);
                 }
@@ -386,7 +387,7 @@ public:
         current_pawn_mask ^= from_mask;
         current_pawn_mask ^= to_mask;
 
-        if (to_mask & white_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, false);
         }
@@ -404,21 +405,21 @@ public:
                 char promotion_type = promotion.second;
                 U64 promotion_mask = 1ULL << promotion.first;
 
-                switch (promotion_type)
-                {
-                case 'Q':
-                    BlackQueen::black_queens_mask |= promotion_mask;
-                    break;
-                case 'R':
-                    BlackRook::black_rooks_mask |= promotion_mask;
-                    break;
-                case 'N':
-                    BlackKnight::black_knights_mask |= promotion_mask;
-                    break;
-                case 'B':
-                    BlackBishop::black_bishops_mask |= promotion_mask;
-                    break;
-                }
+                // switch (promotion_type)
+                // {
+                // case 'Q':
+                //     BlackQueen::black_queens_mask |= promotion_mask;
+                //     break;
+                // case 'R':
+                //     BlackRook::black_rooks_mask |= promotion_mask;
+                //     break;
+                // case 'N':
+                //     BlackKnight::black_knights_mask |= promotion_mask;
+                //     break;
+                // case 'B':
+                //     BlackBishop::black_bishops_mask |= promotion_mask;
+                //     break;
+                // }
             }
         }
 
@@ -497,11 +498,11 @@ public:
                 int to_square = attacks[i];
                 U64 target_mask = 1ULL << to_square;
 
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
-                else if (target_mask & white_pieces_mask)
+                else if (target_mask & white_bitboard)
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
 
@@ -542,7 +543,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         from_square_queen_mask ^= from_mask;
         from_square_queen_mask ^= to_mask;
-        if (to_mask & white_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, true);
         }
@@ -614,11 +615,11 @@ public:
                 int to_square = attacks[i];
                 U64 target_mask = 1ULL << to_square;
 
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                 }
-                else if (target_mask & white_pieces_mask)
+                else if (target_mask & white_bitboard)
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
 
@@ -660,7 +661,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         from_square_rook_mask ^= from_mask;
         from_square_rook_mask ^= to_mask;
-        if (to_mask & white_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, true);
         }
@@ -941,17 +942,21 @@ using U64 = unsigned long long;
 
 class Piece
 {
+protected:
+    U64 bitboard;
+    std::vector<int> linear_coordinates;
 public:
     static void MaskToCapture(U64 to_mask, bool isWhite);
+    static void InitializeBitboards();
     std::array<std::vector<int>, 64> pre_attacks_coordinates;
-    static U64 bitboard;
-    std::vector<int> linear_coordinates;
     std::vector<std::pair<int, int>> moves_vector;
 
     static U64 white_bitboard;
     static U64 black_bitboard;
     static U64 whole_bitboard;
     
+    static std::vector<Piece*> white_pieces;
+    static std::vector<Piece*> black_pieces;
 };
 
 
@@ -1038,12 +1043,12 @@ public:
                 int to_square = attacks[i];
                 U64 target_mask = 1ULL << to_square;
                 
-                if(!(target_mask & all_pieces_mask))
+                if(!(target_mask & whole_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                     squares_controlled |= target_mask;
                 }
-                else if (target_mask & black_pieces_mask)
+                else if (target_mask & black_bitboard)
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                     squares_controlled |= target_mask;
@@ -1078,7 +1083,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         from_square_bishop_mask ^= from_mask;
         from_square_bishop_mask ^= to_mask;
-        if (to_mask & black_pieces_mask)
+        if (to_mask & black_bitboard)
         {
             MaskToCapture(to_mask, false);
         }
@@ -1141,7 +1146,7 @@ public:
             for (int to_square : pre_attacks_coordinates[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if(!(target_mask & white_pieces_mask) && !(target_mask & Black::squares_controlled))
+                if(!(target_mask & white_bitboard) && !(target_mask & Black::squares_controlled))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                     squares_controlled |= target_mask;
@@ -1156,7 +1161,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         from_square_king_mask ^= from_mask;
         from_square_king_mask ^= to_mask;
-        if (to_mask & black_pieces_mask)
+        if (to_mask & black_bitboard)
         {
             MaskToCapture(to_mask, false);
         }
@@ -1219,7 +1224,7 @@ public:
             for (int to_square : pre_attacks_coordinates[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if(!(target_mask & white_pieces_mask))
+                if(!(target_mask & white_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                     squares_controlled |= target_mask;
@@ -1234,7 +1239,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         current_knight_mask ^= from_mask;
         current_knight_mask ^= to_mask;
-        if (to_mask & black_pieces_mask)
+        if (to_mask & black_bitboard)
         {
             MaskToCapture(to_mask, false);
         }
@@ -1285,7 +1290,7 @@ public:
                 int double_step_move = i + 16;
                 int one_step_move = i + 8;
 
-                if (!(white_pawn_pre_moves[i] & all_pieces_mask) && !(white_pawn_pre_moves[one_step_move] & all_pieces_mask))
+                if (!(white_pawn_pre_moves[i] & whole_bitboard) && !(white_pawn_pre_moves[one_step_move] & whole_bitboard))
                 {
                     white_pawn_pre_moves[i] |= 1ULL << double_step_move;
                     coordinates_white_pawn_pre_moves[i].push_back(double_step_move);
@@ -1332,7 +1337,7 @@ public:
             for (int to_square : coordinates_white_pawn_pre_moves[from_square])
             {
                 U64 target_mask = 1ULL << to_square;
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     white_pawn_moves.emplace_back(from_square, to_square);
                 }
@@ -1346,7 +1351,7 @@ public:
                 U64 one_step_mask = 1ULL << one_step_square;
                 U64 double_step_mask = 1ULL << double_step_square;
 
-                if (!(one_step_mask & all_pieces_mask) && !(double_step_mask & all_pieces_mask))
+                if (!(one_step_mask & whole_bitboard) && !(double_step_mask & whole_bitboard))
                 {
                     white_pawn_moves.emplace_back(from_square, double_step_square);
                 }
@@ -1355,7 +1360,7 @@ public:
             for (int attack_square : pre_attacks_coordinates[from_square])
             {
                 U64 attack_mask = 1ULL << attack_square;
-                if (attack_mask & black_pieces_mask)
+                if (attack_mask & black_bitboard)
                 {
                     white_pawn_moves.emplace_back(from_square, attack_square);
                     squares_controlled |= attack_square;
@@ -1372,7 +1377,7 @@ public:
         current_pawn_mask ^= from_mask;
         current_pawn_mask ^= to_mask;
 
-        if (to_mask & black_pieces_mask)
+        if (to_mask & black_bitboard)
         {
             MaskToCapture(to_mask, true);
         }
@@ -1390,21 +1395,21 @@ public:
                 char promotion_type = promotion.second;
                 U64 promotion_mask = 1ULL << promotion.first;
 
-                switch (promotion_type)
-                {
-                case 'Q':
-                    WhiteQueen::white_queens_mask |= promotion_mask;
-                    break;
-                case 'R':
-                    WhiteRook::white_rooks_mask |= promotion_mask;
-                    break;
-                case 'N':
-                    WhiteKnight::white_knights_mask |= promotion_mask;
-                    break;
-                case 'B':
-                    WhiteBishop::white_bishops_mask |= promotion_mask;
-                    break;
-                }
+                // switch (promotion_type)
+                // {
+                // case 'Q':
+                //     WhiteQueen::white_queens_mask |= promotion_mask;
+                //     break;
+                // case 'R':
+                //     WhiteRook::white_rooks_mask |= promotion_mask;
+                //     break;
+                // case 'N':
+                //     WhiteKnight::white_knights_mask |= promotion_mask;
+                //     break;
+                // case 'B':
+                //     WhiteBishop::white_bishops_mask |= promotion_mask;
+                //     break;
+                // }
             }
         }
 
@@ -1487,12 +1492,12 @@ public:
                 int to_square = attacks[i];
                 U64 target_mask = 1ULL << to_square;
 
-                if (!(target_mask & all_pieces_mask))
+                if (!(target_mask & whole_bitboard))
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                     squares_controlled |= target_mask;
                 }
-                else if (target_mask & black_pieces_mask)
+                else if (target_mask & black_bitboard)
                 {
                     moves_vector.push_back(std::make_pair(from_square, to_square));
                     squares_controlled |= target_mask;
@@ -1534,7 +1539,7 @@ public:
         U64 to_mask = 1ULL << move_to_execute.second;
         from_square_queen_mask ^= from_mask;
         from_square_queen_mask ^= to_mask;
-        if (to_mask & black_pieces_mask)
+        if (to_mask & white_bitboard)
         {
             MaskToCapture(to_mask, false);
         }
