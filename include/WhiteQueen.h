@@ -5,6 +5,10 @@
 class WhiteQueen : public Queen, public White
 {
 public:
+    WhiteQueen(U64 bitboard = U64(0b00001000), std::vector<int> linear_coordinates = {3}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteQueensPreAttacks();
+    }
     void CalculateWhiteQueensPreAttacks()
     {
         for (int i = 0; i < 64; ++i)

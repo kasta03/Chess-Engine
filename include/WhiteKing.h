@@ -5,6 +5,10 @@
 class WhiteKing : public King, public White
 {
 public:
+    WhiteKing(U64 bitboard = U64(0b00010000), std::vector<int> linear_coordinates = {4}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteKingPreAttacks();
+    }
     void CalculateWhiteKingPreAttacks()
     {
         for (int i = 0; i < 64; ++i)

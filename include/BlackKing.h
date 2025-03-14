@@ -5,6 +5,10 @@
 class BlackKing : public King, public Black
 {
 public:
+    BlackKing(U64 bitboard = U64(0b00010000) << 56, std::vector<int> linear_coordinates = {60}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackKingPreAttacks();
+    }
     void CalculateBlackKingPreAttacks()
     {
         for (int i = 0; i < 64; ++i)

@@ -4,6 +4,10 @@
 class BlackKnight : public Knight
 {
 public:
+    BlackKnight(U64 bitboard = U64(0b01000010) << 56, std::vector<int> linear_coordinates = {57, 62}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackKnightsPreAttacks();
+    }
     void CalculateBlackKnightsPreAttacks()
     {
         for (int i = 0; i < 64; ++i)

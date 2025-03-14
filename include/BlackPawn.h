@@ -11,6 +11,12 @@ private:
     std::vector<std::pair<int, int>> black_pawn_moves;
 
 public:
+    BlackPawn(U64 bitboard = U64(0b11111111) << 48, std::vector<int> linear_coordinates = {48, 49, 50, 51, 52, 53, 54, 55}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackPawnsPreMoves();
+        CalculateBlackPawnsPreAttacks();
+    }
+
     void CalculateBlackPawnsPreMoves()
     {
         for (int i = 8; i < 56; ++i)

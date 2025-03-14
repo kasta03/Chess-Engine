@@ -2,7 +2,7 @@ $folderPath = "."
 
 $outputFile = "output.txt"
 
-Get-ChildItem -Path $folderPath -Filter "*.h" | ForEach-Object {
+Get-ChildItem -Path $folderPath -Filter "*.cpp" | ForEach-Object {
     Add-Content -Path $outputFile -Value "===== $_ ====="
     Get-Content $_.FullName | Add-Content -Path $outputFile
     Add-Content -Path $outputFile -Value "`n"

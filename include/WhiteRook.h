@@ -5,6 +5,10 @@
 class WhiteRook : public Rook, public White
 {
 public:
+    WhiteRook(U64 bitboard = U64(0b10000001), std::vector<int> linear_coordinates = {0, 7}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteRooksPreAttacks();
+    }
     void CalculateWhiteRooksPreAttacks()
     {
         for (int i = 0; i < 64; ++i)

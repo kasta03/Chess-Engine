@@ -3,6 +3,10 @@
 class BlackQueen : public Queen
 {
 public:
+    BlackQueen(U64 bitboard = U64(0b00001000) << 56, std::vector<int> linear_coordinates = {59}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackQueensPreAttacks();
+    }
     void CalculateBlackQueensPreAttacks()
     {
         for (int i = 0; i < 64; ++i)

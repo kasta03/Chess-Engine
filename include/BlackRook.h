@@ -4,6 +4,10 @@
 class BlackRook : public Rook
 {
 public:
+    BlackRook(U64 bitboard = U64(0b10000001) << 56, std::vector<int> linear_coordinates = {56, 63}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackRooksPreAttacks();
+    }
     void CalculateBlackRooksPreAttacks()
     {
         for (int i = 0; i < 64; ++i)

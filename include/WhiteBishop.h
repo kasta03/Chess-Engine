@@ -5,6 +5,10 @@
 class WhiteBishop : public Bishop, public White
 {
 public:
+    WhiteBishop(U64 bitboard = U64(0b00100100), std::vector<int> linear_coordinates = {2, 5}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteBishopsPreAttacks();
+    }
     void CalculateWhiteBishopsPreAttacks()
     {        
         for (int i = 0; i < 64; ++i)

@@ -12,6 +12,11 @@ private:
     std::vector<std::pair<int, int>> white_pawn_moves;
 
 public:
+    WhitePawn(U64 bitboard = U64(0b11111111) << 8, std::vector<int> linear_coordinates = {8, 9, 10, 11, 12, 13, 14, 15}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhitePawnsPreMoves();
+        CalculateWhitePawnsPreAttacks();
+    }
 
     void CalculateWhitePawnsPreMoves()
     {

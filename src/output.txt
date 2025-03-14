@@ -1,0 +1,162 @@
+===== Bishop.cpp =====
+#include "Bishop.h"
+
+
+===== Black.cpp =====
+#include "Black.h"
+
+U64 Black::squares_controlled = 0;
+
+
+===== BlackBishop.cpp =====
+#include "BlackBishop.h"
+
+U64 bitboard = U64(0b00100100) << 56;
+std::vector<int> linear_coordinates = {58, 61};
+
+
+===== BlackKing.cpp =====
+#include "BlackKing.h"
+`
+U64 bitboard = U64(0b00000001) << 60;
+std::vector<int> linear_coordinates = {60};
+
+
+===== BlackKnight.cpp =====
+#include "BlackKnight.h"
+
+U64 bitboard = U64(0b01000010) << 56;
+std::vector<int> linear_coordinates = {57, 62};
+
+
+===== BlackPawn.cpp =====
+#include "BlackPawn.h"
+
+U64 bitboard = U64(0b11111111) << 48;
+std::vector<int> linear_coordinates = {48, 49, 50, 51, 52, 53, 54, 55};
+
+
+===== BlackQueen.cpp =====
+#include "BlackQueen.h"
+
+U64 bitboard = U64(0b00001000) << 56;
+std::vector<int> linear_coordinates = {59};
+
+
+===== BlackRook.cpp =====
+#include "BlackRook.h"
+
+U64 bitboard = U64(0b10000001) << 56;
+std::vector<int> linear_coordinates = {56, 63};
+
+
+===== Knight.cpp =====
+#include "Knight.h"
+
+
+===== Pawn.cpp =====
+#include "Pawn.h"
+
+
+===== Piece.cpp =====
+#include "Piece.h"
+
+std::vector<Piece*> Piece::white_pieces;
+std::vector<Piece*> Piece::black_pieces;
+
+U64 Piece::white_bitboard = 0;
+U64 Piece::black_bitboard = 0;
+U64 Piece::whole_bitboard = 0;
+
+void Piece::InitializeBitboards()
+{
+    white_bitboard = 0;
+    black_bitboard = 0;
+    
+    for (Piece* piece : white_pieces)
+    {
+        white_bitboard |= piece->bitboard;
+    }
+    
+    for (Piece* piece : black_pieces)
+    {
+        black_bitboard |= piece->bitboard;
+    }
+    
+    whole_bitboard = white_bitboard | black_bitboard;
+}
+
+void Piece::MaskToCapture(U64 to_mask, bool isWhite)
+{
+    std::vector<Piece*>& pieces = isWhite ? white_pieces : black_pieces;
+    
+    for (auto it = pieces.begin(); it != pieces.end(); ++it)
+    {
+        if ((*it)->bitboard & to_mask)
+        {
+            (*it)->bitboard ^= to_mask;
+            break;
+        }
+    }
+    
+    InitializeBitboards();
+}
+
+
+===== White.cpp =====
+#include "White.h"
+
+U64 White::squares_controlled = 0;
+// std::array<U64, 6> bitboards = WhitePawn::bitboard;
+
+
+===== WhiteBishop.cpp =====
+#include "WhiteBishop.h"
+
+U64 bitboard = U64(0b00100100) << 0;
+std::vector<int> linear_coordinates = {2, 5};
+
+
+===== WhiteKing.cpp =====
+#include "WhiteKing.h"
+
+U64 bitboard = U64(0b00010000);
+std::vector<int> linear_coordinates = {4};
+
+
+===== WhiteKnight.cpp =====
+#include "WhiteKnight.h"
+
+U64 bitboard = U64(0b01000010) << 0;
+std::vector<int> linear_coordinates = {1, 6};
+
+
+===== WhitePawn.cpp =====
+#include "WhitePawn.h"
+
+U64 bitboard = U64(11111111) << 8;
+std::vector<int> linear_coordinates = {8, 9, 10, 11, 12, 13, 14, 15};
+
+// void WhitePawn::getPawnsPositions()
+// {
+//     for (int i = 0; i < 64; ++i)
+//     {
+//         white_pawn_positions[i] = WhitePawn::white_pawns_mask & (1ULL << i);
+//     }
+// }
+
+
+===== WhiteQueen.cpp =====
+#include "WhiteQueen.h"
+
+U64 bitboard = U64(0b00001000) << 0;
+std::vector<int> linear_coordinates = {3};
+
+
+===== WhiteRook.cpp =====
+#include "WhiteRook.h"
+
+U64 bitboard = U64(0b10000001) << 0;
+std::vector<int> linear_coordinates = {0, 7};
+
+
