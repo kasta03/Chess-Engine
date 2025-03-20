@@ -10,7 +10,7 @@ using U64 = unsigned long long;
 class Piece
 {
     friend class Engine;
-    friend void print_bitboard();
+    friend void PrintBitboard();
 protected:
     U64 bitboard;
     std::vector<int> linear_coordinates;

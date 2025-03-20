@@ -78,6 +78,7 @@ public:
         }
         return moves_vector;
     }
+    
     U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_bishop_mask, std::vector<int>& linear_coordinates)
     {
         U64 from_mask = 1ULL << move_to_execute.first;

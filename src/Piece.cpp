@@ -1,4 +1,4 @@
-#include "Piece.h"
+#include "../include/Piece.h"
 
 std::vector<Piece*> Piece::white_pieces;
 std::vector<Piece*> Piece::black_pieces;

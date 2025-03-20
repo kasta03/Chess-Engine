@@ -69,7 +69,7 @@ public:
         }
     }
 
-    std::vector<std::pair<int, int>> CalculateWhitePawnsMoves()
+    std::vector<std::pair<int, int>> CalculateWhitePawnsMoves(Engine &game_state)
     {
         white_pawn_moves.clear();
 

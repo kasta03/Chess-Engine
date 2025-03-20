@@ -6,6 +6,8 @@ class Bishop : virtual public Piece
 {
 protected:
     std::array<int, 4> possible_moves = {-9, -7, 7, 9};
+public:
+    Bishop(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
 };
 
 
@@ -20,6 +22,7 @@ protected:
     const bool isWhite = false;
 
 public:
+    Black(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
     static U64 squares_controlled;
 };
 
@@ -31,6 +34,10 @@ public:
 class BlackBishop : public Bishop
 {
 public:
+    BlackBishop(U64 bitboard = U64(0b00100100) << 56, std::vector<int> linear_coordinates = {58, 61}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackBishopsPreAttacks();
+    }
     void CalculateBlackBishopsPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -132,6 +139,10 @@ public:
 class BlackKing : public King, public Black
 {
 public:
+    BlackKing(U64 bitboard = U64(0b00010000) << 56, std::vector<int> linear_coordinates = {60}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackKingPreAttacks();
+    }
     void CalculateBlackKingPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -204,6 +215,10 @@ public:
 class BlackKnight : public Knight
 {
 public:
+    BlackKnight(U64 bitboard = U64(0b01000010) << 56, std::vector<int> linear_coordinates = {57, 62}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackKnightsPreAttacks();
+    }
     void CalculateBlackKnightsPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -285,6 +300,12 @@ private:
     std::vector<std::pair<int, int>> black_pawn_moves;
 
 public:
+    BlackPawn(U64 bitboard = U64(0b11111111) << 48, std::vector<int> linear_coordinates = {48, 49, 50, 51, 52, 53, 54, 55}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackPawnsPreMoves();
+        CalculateBlackPawnsPreAttacks();
+    }
+
     void CalculateBlackPawnsPreMoves()
     {
         for (int i = 8; i < 56; ++i)
@@ -443,6 +464,10 @@ public:
 class BlackQueen : public Queen
 {
 public:
+    BlackQueen(U64 bitboard = U64(0b00001000) << 56, std::vector<int> linear_coordinates = {59}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackQueensPreAttacks();
+    }
     void CalculateBlackQueensPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -568,6 +593,10 @@ public:
 class BlackRook : public Rook
 {
 public:
+    BlackRook(U64 bitboard = U64(0b10000001) << 56, std::vector<int> linear_coordinates = {56, 63}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateBlackRooksPreAttacks();
+    }
     void CalculateBlackRooksPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -681,15 +710,47 @@ public:
 
 ===== Display.h =====
 #pragma once
-#include "Piece.h"
+#include "pch.h"
+#include <iostream>
+
+#define RESET "\033[0m"
+#define WHITE "\033[36m"
+#define BLACK "\033[31m"
 
 void print_bitboard()
 {
-    for (int i = 7 ; i < 0; ++i)
+    for (int i = 7; i >= 0; --i)
     {
-        for (int j = 0 ; j < 7; ++j)
+        for (int j = 0; j <= 7; ++j)
         {
-            std::cout << ((Piece::bitboard >> (i * 8 + j)) & 1) << " "; 
+            U64 square_mask = 1ULL << (i * 8 + j);
+
+            if (Piece::white_pieces.at(0)->bitboard & square_mask)
+                std::cout << WHITE << "P " << RESET;
+            else if (Piece::white_pieces.at(1)->bitboard & square_mask)
+                std::cout << WHITE << "N " << RESET;
+            else if (Piece::white_pieces.at(2)->bitboard & square_mask)
+                std::cout << WHITE << "B " << RESET;
+            else if (Piece::white_pieces.at(3)->bitboard & square_mask)
+                std::cout << WHITE << "R " << RESET;
+            else if (Piece::white_pieces.at(4)->bitboard & square_mask)
+                std::cout << WHITE << "Q " << RESET;
+            else if (Piece::white_pieces.at(5)->bitboard & square_mask)
+                std::cout << WHITE << "K " << RESET;
+            else if (Piece::black_pieces.at(0)->bitboard & square_mask)
+                std::cout << BLACK << "P " << RESET;
+            else if (Piece::black_pieces.at(1)->bitboard & square_mask)
+                std::cout << BLACK << "N " << RESET;
+            else if (Piece::black_pieces.at(2)->bitboard & square_mask)
+                std::cout << BLACK << "B " << RESET;
+            else if (Piece::black_pieces.at(3)->bitboard & square_mask)
+                std::cout << BLACK << "R " << RESET;
+            else if (Piece::black_pieces.at(4)->bitboard & square_mask)
+                std::cout << BLACK << "Q " << RESET;
+            else if (Piece::black_pieces.at(5)->bitboard & square_mask)
+                std::cout << BLACK << "K " << RESET;
+            else
+                std::cout << ". ";
         }
         std::cout << std::endl;
     }
@@ -698,19 +759,7 @@ void print_bitboard()
 
 ===== Engine.h =====
 #pragma once
-#include "Piece.h"
-#include "WhitePawn.h"
-#include "WhiteKnight.h"
-#include "WhiteBishop.h"
-#include "WhiteRook.h"
-#include "WhiteQueen.h"
-#include "WhiteKing.h"
-#include "BlackPawn.h"
-#include "BlackKnight.h"
-#include "BlackBishop.h"
-#include "BlackRook.h"
-#include "BlackQueen.h"
-#include "BlackKing.h"
+#include "pch.h"
 
 class Engine
 {
@@ -825,76 +874,96 @@ public:
         float white_sum = 0;
         float black_sum = 0;
         
-        for(int i = 0; i < WhitePawn::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::white_pieces.at(0)->linear_coordinates.size(); ++i)
         {
-            white_sum += pawn_table_white.at(WhitePawn::linear_coordinates.at(i));
+            white_sum += pawn_table_white.at(Piece::white_pieces.at(0)->linear_coordinates.at(i));
         } 
-        for(int i = 0; i < WhiteKnight::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::white_pieces.at(1)->linear_coordinates.size(); ++i)
         {
-            white_sum += knight_table.at(WhiteKnight::linear_coordinates.at(i));
+            white_sum += knight_table.at(Piece::white_pieces.at(1)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < WhiteBishop::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::white_pieces.at(2)->linear_coordinates.size(); ++i)
         {
-            white_sum += bishop_table.at(WhiteBishop::linear_coordinates.at(i));
+            white_sum += bishop_table.at(Piece::white_pieces.at(2)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < WhiteRook::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::white_pieces.at(3)->linear_coordinates.size(); ++i)
         {
-            white_sum += rook_table.at(WhiteRook::linear_coordinates.at(i));
+            white_sum += rook_table.at(Piece::white_pieces.at(3)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < WhiteQueen::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::white_pieces.at(4)->linear_coordinates.size(); ++i)
         {
-            white_sum += queen_table.at(WhiteQueen::linear_coordinates.at(i));
+            white_sum += queen_table.at(Piece::white_pieces.at(4)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < WhiteKing::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::white_pieces.at(5)->linear_coordinates.size(); ++i)
         {
-            white_sum += king_table_midgame_white.at(WhiteKing::linear_coordinates.at(i));
+            white_sum += king_table_midgame_white.at(Piece::white_pieces.at(5)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < BlackPawn::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::black_pieces.at(0)->linear_coordinates.size(); ++i)
         {
-            black_sum += pawn_table_black.at(BlackPawn::linear_coordinates.at(i));
+            black_sum += pawn_table_black.at(Piece::black_pieces.at(0)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < BlackKnight::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::black_pieces.at(1)->linear_coordinates.size(); ++i)
         {
-            black_sum += knight_table.at(BlackKnight::linear_coordinates.at(i));
+            black_sum += knight_table.at(Piece::black_pieces.at(1)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < BlackBishop::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::black_pieces.at(2)->linear_coordinates.size(); ++i)
         {
-            black_sum += bishop_table.at(BlackBishop::linear_coordinates.at(i));
+            black_sum += bishop_table.at(Piece::black_pieces.at(2)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < BlackRook::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::black_pieces.at(3)->linear_coordinates.size(); ++i)
         {
-            black_sum += rook_table.at(BlackRook::linear_coordinates.at(i));
+            black_sum += rook_table.at(Piece::black_pieces.at(3)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < BlackQueen::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::black_pieces.at(4)->linear_coordinates.size(); ++i)
         {
-            black_sum += queen_table.at(BlackQueen::linear_coordinates.at(i));
+            black_sum += queen_table.at(Piece::black_pieces.at(4)->linear_coordinates.at(i));
         }
-        for(int i = 0; i < BlackKing::linear_coordinates.size(); ++i)
+        for(int i = 0; i < Piece::black_pieces.at(5)->linear_coordinates.size(); ++i)
         {
-            black_sum += king_table_midgame_black.at(BlackKing::linear_coordinates.at(i));
+            black_sum += king_table_midgame_black.at(Piece::black_pieces.at(5)->linear_coordinates.at(i));
         }
         return white_sum - black_sum;
     }
 
-    void ExecuteMove(std::pair<int, int> move_to_execute, U64 from_mask, U64 to_mask, std::vector<int>& linear_coordinates)
-    {
-        from_mask ^= 1ULL << move_to_execute.first;
-        from_mask ^= 1ULL << move_to_execute.second;
-        if (to_mask & Piece::whole_bitboard)
-        {
-            Piece::MaskToCapture(to_mask, false);
-        }
+    // void ExecuteMove(std::pair<int, int> move_to_execute, U64 from_mask, U64 to_mask, std::vector<int>& linear_coordinates)
+    // {
+    //     from_mask ^= 1ULL << move_to_execute.first;
+    //     from_mask ^= 1ULL << move_to_execute.second;
+    //     if (to_mask & Piece::whole_bitboard)
+    //     {
+    //         Piece::MaskToCapture(to_mask, false);
+    //     }
 
-        for (int i = 0; i < linear_coordinates.size(); ++i)
-        {
-            if (linear_coordinates.at(i) == move_to_execute.first)
-            {
-                linear_coordinates.at(i) = move_to_execute.second;
-            }
-        }
-        isMove ^= 1;
-    }
+    //     for (int i = 0; i < linear_coordinates.size(); ++i)
+    //     {
+    //         if (linear_coordinates.at(i) == move_to_execute.first)
+    //         {
+    //             linear_coordinates.at(i) = move_to_execute.second;
+    //         }
+    //     }
+    //     isMove = !isMove;
+    // }
+    
 };  
+
+
+===== Game.h =====
+#include "pch.h"
+
+class Game
+{
+public:
+    bool playerColour;
+
+    Game() = default;
+    ~Game() = default;
+
+    void StartGame();
+    void PickColour();
+    void EndGame();
+    void ResetGame();
+    void flipTurn();
+}
 
 
 ===== King.h =====
@@ -905,6 +974,8 @@ class King : virtual public Piece
 {
 protected:
     std::array<int, 8> possible_moves = {-9, -8, -7, -1, 1, 7, 8, 9};
+public:
+    King(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
 };
 
 
@@ -916,6 +987,8 @@ class Knight : virtual public Piece
 {
 protected:    
     std::array<int, 8> possible_moves = {6, 15, 17, 10, -6, -15, -17, -10};
+public:
+    Knight(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
 };
 
 
@@ -925,9 +998,36 @@ protected:
 
 class Pawn : virtual public Piece
 {
-protected:
-
+public:
+    Pawn(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
+    // Pawn(U64 bitboard, std::vector<int> linear_coordinates);
 };
+
+
+===== pch.h =====
+#pragma once
+#include "Piece.h"
+#include "White.h"
+#include "Black.h"
+#include "King.h"
+#include "Queen.h"
+#include "Bishop.h"
+#include "Knight.h"
+#include "Rook.h"
+#include "Pawn.h"
+#include "WhiteKing.h"
+#include "WhiteQueen.h"
+#include "WhiteBishop.h"
+#include "WhiteKnight.h"
+#include "WhiteRook.h"
+#include "WhitePawn.h"
+#include "BlackKing.h"
+#include "BlackQueen.h"
+#include "BlackBishop.h"
+#include "BlackKnight.h"
+#include "BlackRook.h"
+#include "BlackPawn.h"
+#include "Display.h"
 
 
 ===== Piece.h =====
@@ -942,12 +1042,22 @@ using U64 = unsigned long long;
 
 class Piece
 {
+    friend class Engine;
+    friend void print_bitboard();
 protected:
     U64 bitboard;
     std::vector<int> linear_coordinates;
 public:
+    Piece(U64 bitboard, std::vector<int> initial_coordinates) : bitboard(bitboard), linear_coordinates(initial_coordinates) {};
+    virtual ~Piece() = default;
+
+    // virtual void CalculatePreAttacks();
+    // virtual std::vector<std::pair<int, int>> CalculateMoves();
+    // virtual U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_piece_mask, std::vector<int>& linear_coordinates);
+
     static void MaskToCapture(U64 to_mask, bool isWhite);
     static void InitializeBitboards();
+    
     std::array<std::vector<int>, 64> pre_attacks_coordinates;
     std::vector<std::pair<int, int>> moves_vector;
 
@@ -968,6 +1078,8 @@ class Queen : virtual public Piece
 {
 protected:
     std::array<int, 8> possible_moves = {-9, -8, -7, -1, 1, 7, 8, 9};
+public:
+    Queen(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
 };
 
 
@@ -979,6 +1091,8 @@ class Rook : virtual public Piece
 {
 protected:
     std::array<int, 4> possible_moves = {-8, -1, 1, 8};
+public:
+    Rook(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
 };
 
 
@@ -996,6 +1110,7 @@ protected:
     const bool isWhite = true;
 
 public:
+    White(U64 bitboard = 0, std::vector<int> linear_coordinates = {}) : Piece(bitboard, linear_coordinates) {}
     static U64 squares_controlled;
 };
 
@@ -1008,6 +1123,10 @@ public:
 class WhiteBishop : public Bishop, public White
 {
 public:
+    WhiteBishop(U64 bitboard = U64(0b00100100), std::vector<int> linear_coordinates = {2, 5}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteBishopsPreAttacks();
+    }
     void CalculateWhiteBishopsPreAttacks()
     {        
         for (int i = 0; i < 64; ++i)
@@ -1113,6 +1232,10 @@ public:
 class WhiteKing : public King, public White
 {
 public:
+    WhiteKing(U64 bitboard = U64(0b00010000), std::vector<int> linear_coordinates = {4}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteKingPreAttacks();
+    }
     void CalculateWhiteKingPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -1191,6 +1314,11 @@ public:
 class WhiteKnight : public Knight, public White
 {
 public:
+    public:
+    WhiteKnight(U64 bitboard = U64(0b01000010), std::vector<int> linear_coordinates = {1, 6}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteKnightsPreAttacks();
+    }
     void CalculateWhiteKnightsPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -1276,6 +1404,11 @@ private:
     std::vector<std::pair<int, int>> white_pawn_moves;
 
 public:
+    WhitePawn(U64 bitboard = U64(0b11111111) << 8, std::vector<int> linear_coordinates = {8, 9, 10, 11, 12, 13, 14, 15}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhitePawnsPreMoves();
+        CalculateWhitePawnsPreAttacks();
+    }
 
     void CalculateWhitePawnsPreMoves()
     {
@@ -1439,6 +1572,10 @@ public:
 class WhiteQueen : public Queen, public White
 {
 public:
+    WhiteQueen(U64 bitboard = U64(0b00001000), std::vector<int> linear_coordinates = {3}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteQueensPreAttacks();
+    }
     void CalculateWhiteQueensPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
@@ -1570,6 +1707,10 @@ public:
 class WhiteRook : public Rook, public White
 {
 public:
+    WhiteRook(U64 bitboard = U64(0b10000001), std::vector<int> linear_coordinates = {0, 7}) : Piece(bitboard, linear_coordinates)
+    {
+        CalculateWhiteRooksPreAttacks();
+    }
     void CalculateWhiteRooksPreAttacks()
     {
         for (int i = 0; i < 64; ++i)
