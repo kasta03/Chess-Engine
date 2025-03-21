@@ -112,16 +112,16 @@ public:
         return black_pawn_moves;
     }
 
-    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int> &linear_coordinates)
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_mask, std::vector<int>& linear_coordinates, GameState& game_state, bool isWhite)
     {
         U64 from_mask = 1ULL << move_to_execute.first;
         U64 to_mask = 1ULL << move_to_execute.second;
-        current_pawn_mask ^= from_mask;
-        current_pawn_mask ^= to_mask;
+        from_square_mask ^= from_mask;
+        from_square_mask ^= to_mask;
 
         if (to_mask & white_bitboard)
         {
-            MaskToCapture(to_mask, false);
+            MaskToCapture(to_mask, false, game_state);
         }
 
         if (move_to_execute.second <= 7 && move_to_execute.second >= 0)
@@ -164,6 +164,6 @@ public:
             }
         }
 
-        return current_pawn_mask;
+        return from_square_mask;
     }
 };

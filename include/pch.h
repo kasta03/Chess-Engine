@@ -22,5 +22,6 @@
 #include "BlackPawn.h"
 #include "Display.h"
 #include "Game.h"
+#include "Engine.h"
 #include <chrono>
 #include <thread>

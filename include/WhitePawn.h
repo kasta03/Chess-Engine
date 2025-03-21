@@ -69,7 +69,7 @@ public:
         }
     }
 
-    std::vector<std::pair<int, int>> CalculateWhitePawnsMoves(Engine &game_state)
+    std::vector<std::pair<int, int>> CalculateWhitePawnsMoves()
     {
         white_pawn_moves.clear();
 
@@ -111,16 +111,16 @@ public:
         return white_pawn_moves;
     }
 
-    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_pawn_mask, std::vector<int> &linear_coordinates)
+    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_mask, std::vector<int>& linear_coordinates, GameState& game_state, bool isWhite)
     {
         U64 from_mask = 1ULL << move_to_execute.first;
         U64 to_mask = 1ULL << move_to_execute.second;
-        current_pawn_mask ^= from_mask;
-        current_pawn_mask ^= to_mask;
+        from_square_mask ^= from_mask;
+        from_square_mask ^= to_mask;
 
-        if (to_mask & black_bitboard)
+        if (to_mask & game_state.black_bitboard)
         {
-            MaskToCapture(to_mask, true);
+            MaskToCapture(to_mask, true, game_state);
         }
 
         if (move_to_execute.second >= 56 && move_to_execute.second <= 63)
@@ -163,7 +163,7 @@ public:
             }
         }
 
-        return current_pawn_mask;
+        return from_square_mask;
     }
 };
 

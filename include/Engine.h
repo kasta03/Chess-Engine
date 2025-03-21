@@ -1,23 +1,13 @@
 #pragma once
 #include "pch.h"
 
-struct GameState
+class GameState
 {
+public:
     GameState()
+        : white_pawn(WhitePawn()), white_knight(WhiteKnight()), white_bishop(WhiteBishop()), white_rook(WhiteRook()), white_queen(WhiteQueen()), white_king(WhiteKing()),
+          black_pawn(BlackPawn()), black_knight(BlackKnight()), black_bishop(BlackBishop()), black_rook(BlackRook()), black_queen(BlackQueen()), black_king(BlackKing())
     {
-        WhitePawn white_pawn = *dynamic_cast<WhitePawn *>(Piece::white_pieces.at(0));
-        WhiteKnight white_knight = *dynamic_cast<WhiteKnight *>(Piece::white_pieces.at(1));
-        WhiteBishop white_bishop = *dynamic_cast<WhiteBishop *>(Piece::white_pieces.at(2));
-        WhiteRook white_rook = *dynamic_cast<WhiteRook *>(Piece::white_pieces.at(3));
-        WhiteQueen white_queen = *dynamic_cast<WhiteQueen *>(Piece::white_pieces.at(4));
-        WhiteKing white_king = *dynamic_cast<WhiteKing *>(Piece::white_pieces.at(5));
-
-        BlackPawn black_pawn = *dynamic_cast<BlackPawn *>(Piece::black_pieces.at(0));
-        BlackKnight black_knight = *dynamic_cast<BlackKnight *>(Piece::black_pieces.at(1));
-        BlackBishop black_bishop = *dynamic_cast<BlackBishop *>(Piece::black_pieces.at(2));
-        BlackRook black_rook = *dynamic_cast<BlackRook *>(Piece::black_pieces.at(3));
-        BlackQueen black_queen = *dynamic_cast<BlackQueen *>(Piece::black_pieces.at(4));
-        BlackKing black_king = *dynamic_cast<BlackKing *>(Piece::black_pieces.at(5));
     }
 
     WhitePawn white_pawn;
@@ -33,10 +23,18 @@ struct GameState
     BlackRook black_rook;
     BlackQueen black_queen;
     BlackKing black_king;
+
+    std::vector<Piece *> white_pieces = {&white_pawn, &white_knight, &white_bishop, &white_rook, &white_queen, &white_king};
+    std::vector<Piece *> black_pieces = {&black_pawn, &black_knight, &black_bishop, &black_rook, &black_queen, &black_king};
+
+    U64 white_bitboard = white_pawn.bitboard | white_knight.bitboard | white_bishop.bitboard | white_rook.bitboard | white_queen.bitboard | white_king.bitboard;
+    U64 black_bitboard = black_pawn.bitboard | black_knight.bitboard | black_bishop.bitboard | black_rook.bitboard | black_queen.bitboard | black_king.bitboard;
+    U64 whole_bitboard = white_bitboard | black_bitboard;
 };
 
 class Engine
 {
+    int evaluation = 0;
     int isMove = 1;
     const std::array<float, 64> knight_table = {
         2.5, 2.7, 2.9, 2.9, 2.9, 2.9, 2.7, 2.5,
@@ -188,116 +186,180 @@ public:
         return white_sum + black_sum;
     }
 
-    float EvaluateCurrentPosition(WhitePawn white_pawn, WhiteKnight white_knight, WhiteBishop white_bishop, WhiteRook white_rook, WhiteQueen white_queen, WhiteKing white_king,
-                                  BlackPawn black_pawn, BlackKnight black_knight, BlackBishop black_bishop, BlackRook black_rook, BlackQueen black_queen, BlackKing black_king)
+    float EvaluateCurrentPosition(GameState &game_state)
     {
         float white_sum = 0;
         float black_sum = 0;
 
-        for (int i = 0; i < white_pawn.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.white_pawn.linear_coordinates.size(); ++i)
         {
-            white_sum += pawn_table_white.at(white_pawn.linear_coordinates.at(i));
+            white_sum += pawn_table_white.at(game_state.white_pawn.linear_coordinates.at(i));
         }
-        for (int i = 0; i < white_knight.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.white_knight.linear_coordinates.size(); ++i)
         {
-            white_sum += knight_table.at(white_knight.linear_coordinates.at(i));
+            white_sum += knight_table.at(game_state.white_knight.linear_coordinates.at(i));
         }
-        for (int i = 0; i < white_bishop.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.white_bishop.linear_coordinates.size(); ++i)
         {
-            white_sum += bishop_table.at(white_bishop.linear_coordinates.at(i));
+            white_sum += bishop_table.at(game_state.white_bishop.linear_coordinates.at(i));
         }
-        for (int i = 0; i < white_rook.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.white_rook.linear_coordinates.size(); ++i)
         {
-            white_sum += rook_table.at(white_rook.linear_coordinates.at(i));
+            white_sum += rook_table.at(game_state.white_rook.linear_coordinates.at(i));
         }
-        for (int i = 0; i < white_queen.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.white_queen.linear_coordinates.size(); ++i)
         {
-            white_sum += queen_table.at(white_queen.linear_coordinates.at(i));
+            white_sum += queen_table.at(game_state.white_queen.linear_coordinates.at(i));
         }
-        for (int i = 0; i < white_king.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.white_king.linear_coordinates.size(); ++i)
         {
-            white_sum += king_table_midgame_white.at(white_king.linear_coordinates.at(i));
+            white_sum += king_table_midgame_white.at(game_state.white_king.linear_coordinates.at(i));
         }
-        for (int i = 0; i < black_pawn.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.black_pawn.linear_coordinates.size(); ++i)
         {
-            black_sum -= pawn_table_black.at(black_pawn.linear_coordinates.at(i));
+            black_sum -= pawn_table_black.at(game_state.black_pawn.linear_coordinates.at(i));
         }
-        for (int i = 0; i < black_knight.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.black_knight.linear_coordinates.size(); ++i)
         {
-            black_sum -= knight_table.at(black_knight.linear_coordinates.at(i));
+            black_sum -= knight_table.at(game_state.black_knight.linear_coordinates.at(i));
         }
-        for (int i = 0; i < black_bishop.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.black_bishop.linear_coordinates.size(); ++i)
         {
-            black_sum -= bishop_table.at(black_bishop.linear_coordinates.at(i));
+            black_sum -= bishop_table.at(game_state.black_bishop.linear_coordinates.at(i));
         }
-        for (int i = 0; i < black_rook.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.black_rook.linear_coordinates.size(); ++i)
         {
-            black_sum -= rook_table.at(black_rook.linear_coordinates.at(i));
+            black_sum -= rook_table.at(game_state.black_rook.linear_coordinates.at(i));
         }
-        for (int i = 0; i < black_queen.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.black_queen.linear_coordinates.size(); ++i)
         {
-            black_sum -= queen_table.at(black_queen.linear_coordinates.at(i));
+            black_sum -= queen_table.at(game_state.black_queen.linear_coordinates.at(i));
         }
-        for (int i = 0; i < black_king.linear_coordinates.size(); ++i)
+        for (int i = 0; i < game_state.black_king.linear_coordinates.size(); ++i)
         {
-            black_sum -= king_table_midgame_black.at(black_king.linear_coordinates.at(i));
+            black_sum -= king_table_midgame_black.at(game_state.black_king.linear_coordinates.at(i));
         }
-
         return white_sum + black_sum;
     }
 
-    std::vector<std::vector<Piece *>> GenerateMoves(bool isWhite, GameState &game_state)
+    std::pair<int, int> GenerateMoves(bool isWhite, GameState &game_state, int depth, bool maximazingColour, int counter = 0)
     {
         std::vector<GameState> game_states;
         game_states.push_back(game_state);
-
+        if (maximazingColour && counter == 0)
+        {
+            evaluation = -std::numeric_limits<float>::infinity();
+        }
+        else if (!maximazingColour && counter == 0)
+        {
+            evaluation = std::numeric_limits<float>::infinity();
+        }
+        if (depth == 0 && EvaluateCurrentPosition(game_state) > evaluation && isWhite)
+        {
+            evaluation = EvaluateCurrentPosition(game_state);
+        }
+        else if (depth == 0 && EvaluateCurrentPosition(game_state) < evaluation && !isWhite)
+        {
+            evaluation = EvaluateCurrentPosition(game_state);
+        }
+        if (depth == 0)
+        {
+            return std::make_pair(evaluation, counter);
+        }
         if (isWhite)
         {
             std::vector<std::pair<int, int>> pawn_moves = game_state.white_pawn.CalculateWhitePawnsMoves();
             for (const auto &move : pawn_moves)
             {
-                game_state.white_pawn.ExecuteMove(move, game_state.white_pawn.bitboard, game_state.white_pawn.linear_coordinates);
+                game_state.white_pawn.ExecuteMove(move, game_state.white_pawn.bitboard, game_state.white_pawn.linear_coordinates, game_state, counter);
                 game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
             }
 
             std::vector<std::pair<int, int>> knight_moves = game_state.white_knight.CalculateWhiteKnightsMoves();
             for (const auto &move : knight_moves)
             {
-                game_state.white_knight.ExecuteMove(move, game_state.white_knight.bitboard, game_state.white_knight.linear_coordinates);
+                game_state.white_knight.ExecuteMove(move, game_state.white_knight.bitboard, game_state.white_knight.linear_coordinates, game_state, counter);
                 game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
             }
 
             std::vector<std::pair<int, int>> bishop_moves = game_state.white_bishop.CalculateWhiteBishopsMoves();
             for (const auto &move : bishop_moves)
             {
-                game_state.white_bishop.ExecuteMove(move, game_state.white_bishop.bitboard, game_state.white_bishop.linear_coordinates);
+                game_state.white_bishop.ExecuteMove(move, game_state.white_bishop.bitboard, game_state.white_bishop.linear_coordinates, game_state, counter);
                 game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
             }
 
             std::vector<std::pair<int, int>> rook_moves = game_state.white_rook.CalculateWhiteRooksMoves();
             for (const auto &move : rook_moves)
             {
-                game_state.white_rook.ExecuteMove(move, game_state.white_rook.bitboard, game_state.white_rook.linear_coordinates);
+                game_state.white_rook.ExecuteMove(move, game_state.white_rook.bitboard, game_state.white_rook.linear_coordinates, game_state, counter);
                 game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
             }
 
             std::vector<std::pair<int, int>> queen_moves = game_state.white_queen.CalculateWhiteQueensMoves();
             for (const auto &move : queen_moves)
             {
-                game_state.white_queen.ExecuteMove(move, game_state.white_queen.bitboard, game_state.white_queen.linear_coordinates);
+                game_state.white_queen.ExecuteMove(move, game_state.white_queen.bitboard, game_state.white_queen.linear_coordinates, game_state, counter);
                 game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
             }
 
             std::vector<std::pair<int, int>> king_moves = game_state.white_king.CalculateWhiteKingMoves();
             for (const auto &move : king_moves)
             {
-                game_state.white_king.ExecuteMove(move, game_state.white_king.bitboard, game_state.white_king.linear_coordinates);
+                game_state.white_king.ExecuteMove(move, game_state.white_king.bitboard, game_state.white_king.linear_coordinates, game_state, counter);
                 game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
             }
         }
         else
         {
-            
+            std::vector<std::pair<int, int>> pawn_moves = game_state.black_pawn.CalculateBlackPawnsMoves();
+            for (const auto &move : pawn_moves)
+            {
+                game_state.black_pawn.ExecuteMove(move, game_state.black_pawn.bitboard, game_state.black_pawn.linear_coordinates, game_state, false);
+                game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
+            }
+            std::vector<std::pair<int, int>> knight_moves = game_state.black_knight.CalculateBlackKnightsMoves();
+            for (const auto &move : knight_moves)
+            {
+                game_state.black_knight.ExecuteMove(move, game_state.black_knight.bitboard, game_state.black_knight.linear_coordinates, game_state, false);
+                game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
+            }
+            std::vector<std::pair<int, int>> bishop_moves = game_state.black_bishop.CalculateBlackBishopsMoves();
+            for (const auto &move : bishop_moves)
+            {
+                game_state.black_bishop.ExecuteMove(move, game_state.black_bishop.bitboard, game_state.black_bishop.linear_coordinates, game_state, false);
+                game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
+            }
+            std::vector<std::pair<int, int>> rook_moves = game_state.black_rook.CalculateBlackRooksMoves();
+            for (const auto &move : rook_moves)
+            {
+                game_state.black_rook.ExecuteMove(move, game_state.black_rook.bitboard, game_state.black_rook.linear_coordinates, game_state, false);
+                game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
+            }
+            std::vector<std::pair<int, int>> queen_moves = game_state.black_queen.CalculateBlackQueensMoves();
+            for (const auto &move : queen_moves)
+            {
+                game_state.black_queen.ExecuteMove(move, game_state.black_queen.bitboard, game_state.black_queen.linear_coordinates, game_state, false);
+                game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
+            }
+            std::vector<std::pair<int, int>> king_moves = game_state.black_king.CalculateBlackKingMoves();
+            for (const auto &move : king_moves)
+            {
+                game_state.black_king.ExecuteMove(move, game_state.black_king.bitboard, game_state.black_king.linear_coordinates, game_state, false);
+                game_states.push_back(game_state);
+                GenerateMoves(!isWhite, game_state, depth - 1, maximazingColour, ++counter);
+            }
         }
     }
 
@@ -313,22 +375,22 @@ public:
         }
     }
 
-    void ExecuteMove(std::pair<int, int> move_to_execute, U64 from_mask, U64 to_mask, std::vector<int> &linear_coordinates)
-    {
-        from_mask ^= 1ULL << move_to_execute.first;
-        from_mask ^= 1ULL << move_to_execute.second;
-        if (to_mask & Piece::whole_bitboard)
-        {
-            Piece::MaskToCapture(to_mask, false);
-        }
+    // void ExecuteMove(std::pair<int, int> move_to_execute, U64 from_mask, U64 to_mask, std::vector<int> &linear_coordinates, GameState &game_state)
+    // {
+    //     from_mask ^= 1ULL << move_to_execute.first;
+    //     from_mask ^= 1ULL << move_to_execute.second;
+    //     if (to_mask & Piece::whole_bitboard)
+    //     {
+    //         Piece::MaskToCapture(to_mask, false, game_state);
+    //     }
 
-        for (int i = 0; i < linear_coordinates.size(); ++i)
-        {
-            if (linear_coordinates.at(i) == move_to_execute.first)
-            {
-                linear_coordinates.at(i) = move_to_execute.second;
-            }
-        }
-        isMove = !isMove;
-    }
+    //     for (int i = 0; i < linear_coordinates.size(); ++i)
+    //     {
+    //         if (linear_coordinates.at(i) == move_to_execute.first)
+    //         {
+    //             linear_coordinates.at(i) = move_to_execute.second;
+    //         }
+    //     }
+    //     isMove = !isMove;
+    // }
 };

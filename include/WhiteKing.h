@@ -51,26 +51,26 @@ public:
         }
         return moves_vector;
     }
-    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_king_mask, std::vector<int>& linear_coordinates)
-    {
-        U64 from_mask = 1ULL << move_to_execute.first;
-        U64 to_mask = 1ULL << move_to_execute.second;
-        from_square_king_mask ^= from_mask;
-        from_square_king_mask ^= to_mask;
-        if (to_mask & black_bitboard)
-        {
-            MaskToCapture(to_mask, false);
-        }
+    // U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 from_square_king_mask, std::vector<int>& linear_coordinates)
+    // {
+    //     U64 from_mask = 1ULL << move_to_execute.first;
+    //     U64 to_mask = 1ULL << move_to_execute.second;
+    //     from_square_king_mask ^= from_mask;
+    //     from_square_king_mask ^= to_mask;
+    //     if (to_mask & black_bitboard)
+    //     {
+    //         MaskToCapture(to_mask, false);
+    //     }
 
-        for(int i = 0; i < linear_coordinates.size(); ++i)
-        {
-            if(linear_coordinates.at(i) == move_to_execute.first)
-            {
-                linear_coordinates.at(i) = move_to_execute.second;
-            }
-        }
-        return from_square_king_mask;
-    }
+    //     for(int i = 0; i < linear_coordinates.size(); ++i)
+    //     {
+    //         if(linear_coordinates.at(i) == move_to_execute.first)
+    //         {
+    //             linear_coordinates.at(i) = move_to_execute.second;
+    //         }
+    //     }
+    //     return from_square_king_mask;
+    // }
 };
 
 

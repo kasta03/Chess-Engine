@@ -52,29 +52,24 @@ public:
         }
         return moves_vector;
     }
-    U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates)
-    {
-        U64 from_mask = 1ULL << move_to_execute.first;
-        U64 to_mask = 1ULL << move_to_execute.second;
-        current_knight_mask ^= from_mask;
-        current_knight_mask ^= to_mask;
-        if (to_mask & black_bitboard)
-        {
-            MaskToCapture(to_mask, false);
-        }
+    // U64 ExecuteMove(std::pair<int, int> move_to_execute, U64 current_knight_mask, std::vector<int>& linear_coordinates, GameState& game_state)
+    // {
+    //     U64 from_mask = 1ULL << move_to_execute.first;
+    //     U64 to_mask = 1ULL << move_to_execute.second;
+    //     current_knight_mask ^= from_mask;
+    //     current_knight_mask ^= to_mask;
+    //     if (to_mask & black_bitboard)
+    //     {
+    //         MaskToCapture(to_mask, false, game_state);
+    //     }
 
-        for(int i = 0; i < linear_coordinates.size(); ++i)
-        {
-            if(linear_coordinates.at(i) == move_to_execute.first)
-            {
-                linear_coordinates.at(i) = move_to_execute.second;
-            }
-        }
-        return current_knight_mask;
-    }
+    //     for(int i = 0; i < linear_coordinates.size(); ++i)
+    //     {
+    //         if(linear_coordinates.at(i) == move_to_execute.first)
+    //         {
+    //             linear_coordinates.at(i) = move_to_execute.second;
+    //         }
+    //     }
+    //     return current_knight_mask;
+    // }
 };
-
-
-
-
-
